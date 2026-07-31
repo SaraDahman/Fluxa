@@ -8,5 +8,11 @@
 
   "eslint.validate": ["javascript", "typescript", "typescriptreact"],
 
-  "prettier.requireConfig": true
+  "prettier.requireConfig": true,
+
+  "ts.preferences.importModuleSpecifier": "non-relative",
+  "js.preferences.importModuleSpecifier": "non-relative"
+
+  // "css.lint.unknownAtRules": "ignore",
+  // "scss.lint.unknownAtRules": "ignore"
 }
