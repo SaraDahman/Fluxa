@@ -16,13 +16,12 @@
     "lint-staged": "^17.2.0",
     "prettier": "^3.9.6"
   },
+  "pnpm": {
+    "overrides": {
+      "typescript": "^6.0.2"
+    }
+  },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
+    "**/*": "pnpm -r --parallel lint-staged"
   }
 }
