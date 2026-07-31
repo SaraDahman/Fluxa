@@ -7,9 +7,22 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
+  /* Keeps shadcn's layout font but falls back to your custom system-ui list */
   --font-sans: "Geist Variable", "Inter", system-ui, -apple-system, sans-serif;
 
-  /* Maps your active tokens to Tailwind utility classes */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -29,8 +42,6 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-
-  /* Radius mappings */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -39,13 +50,13 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Your custom showcase design system tokens */
+  /* 1. Added your extra custom theme colors here */
   --color-showcase-text: var(--showcase-text);
   --color-showcase-glow-1: var(--showcase-glow-1);
   --color-showcase-glow-2: var(--showcase-glow-2);
   --color-showcase-accent: var(--showcase-accent);
 
-  /* Your custom animations */
+  /* 2. Added your custom animations here */
   --animate-float: float 8s ease-in-out infinite;
   --animate-float-slow: float 14s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
@@ -53,6 +64,7 @@
   --animate-fade-in: fade-in 0.5s ease-out both;
   --animate-shimmer: shimmer 2.5s linear infinite;
 
+  /* 3. Added your animation keyframes here */
   @keyframes float {
     0%,
     100% {
@@ -97,7 +109,7 @@
 }
 
 :root {
-  /* STRICTLY YOUR LIGHT MODE PALETTE */
+  /* Merged: Your Light Mode theme variables overwriting shadcn defaults */
   --background: #fafafb;
   --foreground: #18181d;
   --card: #ffffff;
@@ -119,6 +131,21 @@
   --ring: #5b5fef;
   --radius: 0.625rem;
 
+  /* Keep standard shadcn fallbacks for charts and sidebars */
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #18181d;
+  --sidebar-primary: #5b5fef;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f6;
+  --sidebar-accent-foreground: #232329;
+  --sidebar-border: #e2e2e6;
+  --sidebar-ring: #5b5fef;
+
   /* Your custom showcase tokens */
   --showcase-bg: linear-gradient(160deg, #2d2d9a 0%, #1f1f6b 100%);
   --showcase-text: #ffffff;
@@ -129,7 +156,7 @@
 }
 
 .dark {
-  /* STRICTLY YOUR DARK MODE PALETTE */
+  /* Merged: Your Dark Mode theme variables overwriting shadcn defaults */
   --background: #07070e;
   --foreground: #ddddf0;
   --card: #0c0c18;
@@ -149,6 +176,21 @@
   --border: #181828;
   --input: #1e1e32;
   --ring: #5b5fef;
+
+  /* Keep standard shadcn fallbacks for charts and sidebars */
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: #0c0c18;
+  --sidebar-foreground: #ddddf0;
+  --sidebar-primary: #5b5fef;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #10101c;
+  --sidebar-accent-foreground: #ddddf0;
+  --sidebar-border: #181828;
+  --sidebar-ring: #5b5fef;
 
   /* Your custom showcase tokens */
   --showcase-bg: linear-gradient(160deg, #0c0c18 0%, #10101c 100%);
@@ -173,7 +215,7 @@
   }
 }
 
-/* Custom helper utility classes */
+/* 4. Added your custom helper utility classes using Tailwind v4 syntax */
 @utility text-balance {
   text-wrap: balance;
 }
