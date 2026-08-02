@@ -129,7 +129,8 @@
   --border: #e2e2e6;
   --input: #dadae0;
   --ring: #5b5fef;
-  --radius: 0.625rem;
+  --radius: 0.5rem;
+  --spacing: 0.23rem;
 
   /* Keep standard shadcn fallbacks for charts and sidebars */
   --chart-1: oklch(0.87 0 0);
@@ -176,6 +177,8 @@
   --border: #181828;
   --input: #1e1e32;
   --ring: #5b5fef;
+  --radius: 0.5rem;
+  --spacing: 0.3rem;
 
   /* Keep standard shadcn fallbacks for charts and sidebars */
   --chart-1: oklch(0.87 0 0);
