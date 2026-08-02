@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { Zap, SquareKanban } from "lucide-react";
 import { AuthShowcase } from "@/features/auth/components/AuthShowcase";
 import { ThemeToggle } from "@/shared/components/common/ThemeToggle";
 import { Outlet } from "react-router-dom";
@@ -15,9 +15,9 @@ export default function AuthLayout() {
         </div>
 
         {/* mobile brand header */}
-        <div className="flex items-center gap-2.5 p-6 lg:hidden">
+        <div className="flex items-center gap-2.5 p-5 lg:hidden">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="h-5 w-5 fill-primary-foreground" />
+            <SquareKanban className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-lg font-semibold tracking-tight">Fluxa</span>
         </div>
