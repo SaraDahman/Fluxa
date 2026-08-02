@@ -58,7 +58,7 @@ export function AuthShowcase() {
       </div>
 
       {/* headline */}
-      <div className="relative z-10 max-w-lg text-showcase-text">
+      <div className="relative z-10 max-w-md text-showcase-text">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur animate-fade-in">
             <span className="h-1.5 w-1.5 rounded-full bg-showcase-accent animate-pulse-soft" />
@@ -89,7 +89,7 @@ export function AuthShowcase() {
       </div>
 
       {/* how it works footer */}
-      <div className="relative z-10 max-w-lg animate-fade-up [animation-delay:560ms]">
+      <div className="relative z-10 max-w-md animate-fade-up [animation-delay:560ms]">
         <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-white/50">
           How Fluxa works
         </p>
