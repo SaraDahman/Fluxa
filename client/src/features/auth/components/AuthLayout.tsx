@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap, SquareKanban } from "lucide-react";
+import { SquareKanban } from "lucide-react";
 import { AuthShowcase } from "@/features/auth/components/AuthShowcase";
 import { ThemeToggle } from "@/shared/components/common/ThemeToggle";
 import { Outlet } from "react-router-dom";
