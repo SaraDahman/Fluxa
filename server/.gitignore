@@ -8,3 +8,11 @@ coverage
 .vscode
 .DS_Store
 *.log
+/src/generated/prisma
+
+/generated/prisma
+
+# AI IDE and Agent Metadata
+.agents/
+.claude/
+.windsurf/
