@@ -1,0 +1,80 @@
+name: Fluxa CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+
+jobs:
+  ci:
+    name: Lint • Type Check • Build • Prisma • Docker
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Lint
+        run: pnpm lint
+
+      - name: 🔎 Type Check
+        run: pnpm type-check
+
+      - name: 🏗️ Build
+        run: pnpm build
+
+      - name: 🗄️ Apply Prisma migrations
+        run: pnpm db:deploy
+
+      - name: ⚙️ Generate Prisma Client
+        run: pnpm db:generate
+
+      - name: 🐳 Build Server Docker image
+        run: docker build \
+          --file server/Dockerfile \
+          --tag fluxa-server:ci \
+          .
+
+      - name: 🐳 Build Client Docker image
+        run: docker build \
+          --file client/Dockerfile \
+          --tag fluxa-client:ci \
+          .
