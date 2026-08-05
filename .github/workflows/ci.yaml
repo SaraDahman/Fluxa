@@ -68,13 +68,7 @@ jobs:
         run: pnpm db:deploy
 
       - name: 🐳 Build Server Docker image
-        run: docker build \
-          --file server/Dockerfile \
-          --tag fluxa-server:ci \
-          .
+        run: docker build -f server/Dockerfile -t fluxa-server:ci .
 
       - name: 🐳 Build Client Docker image
-        run: docker build \
-          --file client/Dockerfile \
-          --tag fluxa-client:ci \
-          .
+        run: docker build -f client/Dockerfile -t fluxa-client:ci .
