@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "cd /app/server && pnpm prisma generate && pnpm prisma migrate deploy && pnpm run build && pnpm run start:dev"]
+CMD ["sh", "-c", "cd /app/server && pnpm prisma generate && pnpm prisma migrate deploy && pnpm run build && pnpm run dev"]

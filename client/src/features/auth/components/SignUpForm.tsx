@@ -57,9 +57,10 @@ export default function SignUpForm() {
     resolver: zodResolver(signUpSchema),
 
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
 
     mode: "onSubmit",
@@ -81,21 +82,21 @@ export default function SignUpForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="name">Full name</FieldLabel>
+          <FieldLabel htmlFor="username">Username</FieldLabel>
 
           <div className="relative">
             <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
             <Input
-              id="name"
-              autoComplete="name"
-              placeholder="Avery Kim"
+              id="username"
+              autoComplete="username"
+              placeholder="avery_kim"
               className="pl-9"
-              {...register("name")}
+              {...register("username")}
             />
           </div>
 
-          <FieldError>{errors.name?.message}</FieldError>
+          <FieldError>{errors.username?.message}</FieldError>
         </Field>
 
         <Field>
@@ -175,6 +176,24 @@ export default function SignUpForm() {
           )}
 
           <FieldError>{errors.password?.message}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
+
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Confirm your password"
+              className="pl-9"
+              {...register("confirmPassword")}
+            />
+          </div>
+
+          <FieldError>{errors.confirmPassword?.message}</FieldError>
         </Field>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
