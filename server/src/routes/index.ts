@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import authRoutes from "../modules/auth/auth.routes";
+
 const router = Router();
 
 router.get("/health", (_, res) => {
@@ -8,5 +10,7 @@ router.get("/health", (_, res) => {
     message: "Server is healthy",
   });
 });
+
+router.use("/auth", authRoutes);
 
 export default router;
