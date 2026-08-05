@@ -11,7 +11,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "pnpm -r type-check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:deploy": "pnpm --filter server db:deploy",
+    "db:generate": "pnpm --filter server db:generate"
   },
   "devDependencies": {
     "husky": "^9.1.7",
