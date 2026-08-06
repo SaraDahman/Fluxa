@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,7 +57,6 @@ export default function SignUpForm() {
     resolver: zodResolver(signUpSchema),
 
     defaultValues: {
-      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -81,24 +80,6 @@ export default function SignUpForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="username">Username</FieldLabel>
-
-          <div className="relative">
-            <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-            <Input
-              id="username"
-              autoComplete="username"
-              placeholder="avery_kim"
-              className="pl-9"
-              {...register("username")}
-            />
-          </div>
-
-          <FieldError>{errors.username?.message}</FieldError>
-        </Field>
-
         <Field>
           <FieldLabel htmlFor="email">Work email</FieldLabel>
 

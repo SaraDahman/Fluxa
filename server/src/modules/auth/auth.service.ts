@@ -30,7 +30,6 @@ function buildAuthResponse(user: UserModel): AuthResponse {
   const payload: AuthTokenPayload = {
     userId: user.id,
     email: user.email,
-    username: user.username,
   };
 
   return {
@@ -48,21 +47,12 @@ export const authService = {
       throw new ApiError(409, "An account with this email already exists");
     }
 
-    const usernameExists = await authRepository.findByUsername(data.username);
-
-    if (usernameExists) {
-      throw new ApiError(409, "This username is already taken");
-    }
-
     const hashedPassword = await hashPassword(data.password);
 
     const user = await authRepository.createUser({
-      username: data.username,
       email: data.email,
       password: hashedPassword,
     });
-
-    console.log(user, "created user <============");
 
     return buildAuthResponse(user);
   },
