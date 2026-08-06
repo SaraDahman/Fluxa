@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
@@ -8,12 +8,16 @@ import { signInSchema, type SignInFormValues } from "../schemas/sign-in.schema";
 
 import { PasswordInput } from "./PasswordInput";
 
+import { PATHS } from "@/router/paths";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 export default function SignInForm() {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -32,6 +36,8 @@ export default function SignInForm() {
     console.log(data);
 
     await new Promise((r) => setTimeout(r, 900));
+
+    navigate(PATHS.CREATE_WORKSPACE);
   }
 
   return (
