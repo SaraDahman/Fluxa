@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, type SignUpFormValues } from "../schemas/sign-up.schema";
 import { PasswordInput } from "./PasswordInput";
 
+import { PATHS } from "@/router/paths";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -74,7 +76,7 @@ export default function SignUpForm() {
 
     await new Promise((r) => setTimeout(r, 900));
 
-    navigate("/app");
+    navigate(PATHS.CREATE_WORKSPACE);
   }
 
   return (

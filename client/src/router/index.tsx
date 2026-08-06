@@ -5,8 +5,8 @@ import SignIn from "@/features/auth/pages/SignIn";
 import SignUp from "@/features/auth/pages/SignUp";
 import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 import AuthLayout from "@/features/auth/components/AuthLayout";
-
-console.log("Router initialized with paths:", PATHS);
+import CreateWorkspace from "@/features/onboarding/pages/CreateWorkspace";
+import CompleteProfile from "@/features/onboarding/pages/CompleteProfile";
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +16,8 @@ export const router = createBrowserRouter([
       { path: PATHS.SIGN_IN, element: <SignIn /> },
       { path: PATHS.SIGN_UP, element: <SignUp /> },
       { path: PATHS.FORGOT_PASSWORD, element: <ForgotPassword /> },
+      { path: PATHS.CREATE_WORKSPACE, element: <CreateWorkspace /> },
+      { path: PATHS.COMPLETE_PROFILE, element: <CompleteProfile /> },
     ],
   },
 
