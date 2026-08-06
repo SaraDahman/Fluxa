@@ -83,7 +83,7 @@ export default function CompleteProfileForm() {
 
     await new Promise((r) => setTimeout(r, 900));
 
-    navigate(PATHS.HOME);
+    navigate(PATHS.APP);
   }
 
   return (
