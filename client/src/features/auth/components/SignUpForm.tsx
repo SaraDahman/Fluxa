@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,9 +57,9 @@ export default function SignUpForm() {
     resolver: zodResolver(signUpSchema),
 
     defaultValues: {
-      name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
 
     mode: "onSubmit",
@@ -80,24 +80,6 @@ export default function SignUpForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="name">Full name</FieldLabel>
-
-          <div className="relative">
-            <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-            <Input
-              id="name"
-              autoComplete="name"
-              placeholder="Avery Kim"
-              className="pl-9"
-              {...register("name")}
-            />
-          </div>
-
-          <FieldError>{errors.name?.message}</FieldError>
-        </Field>
-
         <Field>
           <FieldLabel htmlFor="email">Work email</FieldLabel>
 
@@ -175,6 +157,24 @@ export default function SignUpForm() {
           )}
 
           <FieldError>{errors.password?.message}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
+
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Confirm your password"
+              className="pl-9"
+              {...register("confirmPassword")}
+            />
+          </div>
+
+          <FieldError>{errors.confirmPassword?.message}</FieldError>
         </Field>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
