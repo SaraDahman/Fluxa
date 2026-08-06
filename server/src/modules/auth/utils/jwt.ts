@@ -46,10 +46,10 @@ export function verifyRefreshToken(token: string): AuthTokenPayload {
 
 function toAuthTokenPayload(decoded: string | JwtPayload): AuthTokenPayload {
   if (typeof decoded === "object" && decoded !== null) {
-    const { userId, email, username } = decoded as Partial<AuthTokenPayload>;
+    const { userId, email } = decoded as Partial<AuthTokenPayload>;
 
-    if (userId && email && username) {
-      return { userId, email, username };
+    if (userId && email) {
+      return { userId, email };
     }
   }
 
