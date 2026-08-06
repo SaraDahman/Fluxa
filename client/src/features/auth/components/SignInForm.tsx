@@ -1,15 +1,21 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
+import { ArrowRight, CircleAlert, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { apiClient, getApiErrorMessage } from "@/lib/api-client";
+
+import { saveSession } from "../lib/auth-session";
 import { signInSchema, type SignInFormValues } from "../schemas/sign-in.schema";
+import type { AuthResponse } from "../types";
 
 import { PasswordInput } from "./PasswordInput";
 
 import { PATHS } from "@/router/paths";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -17,6 +23,8 @@ import { Input } from "@/components/ui/input";
 
 export default function SignInForm() {
   const navigate = useNavigate();
+
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const {
     register,
@@ -33,15 +41,32 @@ export default function SignInForm() {
   });
 
   async function onSubmit(data: SignInFormValues) {
-    console.log(data);
+    setFormError(undefined);
 
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const response = await apiClient.post<AuthResponse>("/auth/signin", {
+        email: data.email,
+        password: data.password,
+      });
 
-    navigate(PATHS.CREATE_WORKSPACE);
+      saveSession(response.data.accessToken, response.data.data);
+
+      navigate(response.data.data.profileComplete ? PATHS.APP : PATHS.CREATE_WORKSPACE);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {formError && (
+        <Alert variant="destructive" className="mb-4">
+          <CircleAlert className="size-4" />
+          <AlertTitle>Unable to sign in</AlertTitle>
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
+      )}
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>

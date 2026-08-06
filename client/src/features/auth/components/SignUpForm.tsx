@@ -1,15 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
+import { ArrowRight, Check, CircleAlert, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { apiClient, getApiErrorMessage } from "@/lib/api-client";
+
+import { saveSession } from "../lib/auth-session";
 import { signUpSchema, type SignUpFormValues } from "../schemas/sign-up.schema";
+import type { AuthResponse } from "../types";
+
 import { PasswordInput } from "./PasswordInput";
 
 import { PATHS } from "@/router/paths";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -50,6 +56,8 @@ const requirements = [
 export default function SignUpForm() {
   const navigate = useNavigate();
 
+  const [formError, setFormError] = useState<string | undefined>(undefined);
+
   const {
     register,
     handleSubmit,
@@ -72,15 +80,32 @@ export default function SignUpForm() {
   const strength = useMemo(() => scorePassword(password), [password]);
 
   async function onSubmit(data: SignUpFormValues) {
-    console.log(data);
+    setFormError(undefined);
 
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const response = await apiClient.post<AuthResponse>("/auth/signup", {
+        email: data.email,
+        password: data.password,
+      });
 
-    navigate(PATHS.CREATE_WORKSPACE);
+      saveSession(response.data.accessToken, response.data.data);
+
+      navigate(response.data.data.profileComplete ? PATHS.APP : PATHS.CREATE_WORKSPACE);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {formError && (
+        <Alert variant="destructive" className="mb-4">
+          <CircleAlert className="size-4" />
+          <AlertTitle>Unable to create account</AlertTitle>
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
+      )}
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Work email</FieldLabel>
