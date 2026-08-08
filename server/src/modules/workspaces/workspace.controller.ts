@@ -1,10 +1,13 @@
 import type { Response } from "express";
 
 import type { AuthenticatedRequest } from "../auth/types";
+import type { WorkspaceRequest } from "./types";
 
 import { workspaceService } from "./workspace.service";
 
 import type { CreateWorkspaceBody } from "./dto/create-workspace.schema";
+import type { MemberParams } from "./dto/member-params.schema";
+import type { UpdateMemberRoleBody } from "./dto/update-member-role.schema";
 import type { WorkspaceParams } from "./dto/workspace-params.schema";
 
 export const workspaceController = {
@@ -37,6 +40,50 @@ export const workspaceController = {
     res.json({
       success: true,
       data: workspace,
+    });
+  },
+
+  async listMembers(req: WorkspaceRequest, res: Response) {
+    const { workspaceId } = req.params as unknown as WorkspaceParams;
+
+    const members = await workspaceService.listMembers(workspaceId);
+
+    res.json({
+      success: true,
+      data: members,
+    });
+  },
+
+  async updateMemberRole(req: WorkspaceRequest, res: Response) {
+    const { workspaceId, userId } = req.params as unknown as MemberParams;
+    const { role } = req.body as UpdateMemberRoleBody;
+
+    const member = await workspaceService.updateMemberRole(
+      { userId: req.user!.userId, role: req.membership!.role },
+      workspaceId,
+      userId,
+      role
+    );
+
+    res.json({
+      success: true,
+      message: "Member role updated successfully",
+      data: member,
+    });
+  },
+
+  async removeMember(req: WorkspaceRequest, res: Response) {
+    const { workspaceId, userId } = req.params as unknown as MemberParams;
+
+    await workspaceService.removeMember(
+      { userId: req.user!.userId, role: req.membership!.role },
+      workspaceId,
+      userId
+    );
+
+    res.json({
+      success: true,
+      message: "Member removed successfully",
     });
   },
 };
