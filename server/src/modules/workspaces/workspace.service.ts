@@ -12,6 +12,26 @@ type WorkspaceWithRole = {
   role: MemberRole;
 };
 
+type MemberActor = {
+  userId: string;
+  role: MemberRole;
+};
+
+type WorkspaceMemberWithUser = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  role: MemberRole;
+  createdAt: Date;
+  user: {
+    id: string;
+    email: string;
+    username: string | null;
+    title: string | null;
+    avatar: string | null;
+  };
+};
+
 function slugify(value: string): string {
   const slug = value
     .trim()
@@ -78,5 +98,98 @@ export const workspaceService = {
       workspace: membership.workspace,
       role: membership.role,
     };
+  },
+
+  async listMembers(workspaceId: string): Promise<WorkspaceMemberWithUser[]> {
+    const members = await workspaceRepository.listMembers(workspaceId);
+
+    return members.map((member) => ({
+      id: member.id,
+      workspaceId: member.workspaceId,
+      userId: member.userId,
+      role: member.role,
+      createdAt: member.createdAt,
+      user: member.user,
+    }));
+  },
+
+  async updateMemberRole(
+    actor: MemberActor,
+    workspaceId: string,
+    targetUserId: string,
+    role: MemberRole
+  ): Promise<WorkspaceMemberWithUser> {
+    const target = await workspaceRepository.findMember(workspaceId, targetUserId);
+
+    if (!target) {
+      throw new ApiError(404, "Member not found");
+    }
+
+    if (target.userId === actor.userId) {
+      throw new ApiError(400, "You cannot change your own role");
+    }
+
+    if (actor.role === "ADMIN" && (target.role === "OWNER" || role === "OWNER")) {
+      throw new ApiError(403, "Only the workspace owner can manage owner roles");
+    }
+
+    if (target.role === "OWNER" && role !== "OWNER") {
+      const ownerCount = await workspaceRepository.countOwners(workspaceId);
+
+      if (ownerCount <= 1) {
+        throw new ApiError(400, "You cannot demote the last owner of the workspace");
+      }
+    }
+
+    const member = await workspaceRepository.updateMemberRole(workspaceId, targetUserId, role);
+
+    return {
+      id: member.id,
+      workspaceId: member.workspaceId,
+      userId: member.userId,
+      role: member.role,
+      createdAt: member.createdAt,
+      user: member.user,
+    };
+  },
+
+  async removeMember(actor: MemberActor, workspaceId: string, targetUserId: string): Promise<void> {
+    const target = await workspaceRepository.findMember(workspaceId, targetUserId);
+
+    if (!target) {
+      throw new ApiError(404, "Member not found");
+    }
+
+    const isSelf = target.userId === actor.userId;
+
+    if (isSelf) {
+      if (target.role === "OWNER") {
+        const ownerCount = await workspaceRepository.countOwners(workspaceId);
+
+        if (ownerCount <= 1) {
+          throw new ApiError(400, "You cannot leave the workspace as the last owner");
+        }
+      }
+    } else {
+      if (actor.role === "MEMBER") {
+        throw new ApiError(403, "You do not have permission to remove other members");
+      }
+
+      if (target.role === "OWNER") {
+        if (actor.role !== "OWNER") {
+          throw new ApiError(403, "Only the workspace owner can remove the owner");
+        }
+
+        const ownerCount = await workspaceRepository.countOwners(workspaceId);
+
+        if (ownerCount <= 1) {
+          throw new ApiError(400, "You cannot remove the last owner of the workspace");
+        }
+      } else if (target.role === "ADMIN" && actor.role === "ADMIN") {
+        throw new ApiError(403, "Only the workspace owner can remove admins");
+      }
+    }
+
+    await workspaceRepository.removeMember(workspaceId, targetUserId);
   },
 };
