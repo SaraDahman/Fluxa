@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Building2, Loader2 } from "lucide-react";
 
@@ -11,12 +12,20 @@ import {
 
 import { PATHS } from "@/router/paths";
 
+import { apiClient, getApiErrorMessage } from "@/lib/api-client";
+
+import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
+import type { CreateWorkspaceResponse } from "@/features/workspaces/types";
+
 export default function CreateWorkspaceForm() {
   const navigate = useNavigate();
+
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const {
     register,
@@ -33,15 +42,25 @@ export default function CreateWorkspaceForm() {
   });
 
   async function onSubmit(data: CreateWorkspaceFormValues) {
-    console.log(data);
+    setFormError(undefined);
 
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      await apiClient.post<CreateWorkspaceResponse>("/workspaces", {
+        name: data.name,
+      });
 
-    navigate(PATHS.COMPLETE_PROFILE);
+      navigate(PATHS.APP);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {formError && (
+        <ErrorAlert title="Unable to create workspace" message={formError} className="mb-4" />
+      )}
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="name">Workspace name</FieldLabel>

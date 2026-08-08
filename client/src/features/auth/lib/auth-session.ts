@@ -8,6 +8,10 @@ export function saveSession(accessToken: string, user: AuthUser) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+export function saveUser(user: AuthUser) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
 export function clearSession() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

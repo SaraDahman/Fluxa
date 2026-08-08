@@ -26,6 +26,7 @@ model Workspace {
   projects      Project[]
 
   @@index([createdBy])
+  @@unique([createdBy, name])
   @@map("workspaces")
 }
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, CircleAlert, Loader2, Lock, Mail } from "lucide-react";
+import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,8 @@ import { PasswordInput } from "./PasswordInput";
 
 import { PATHS } from "@/router/paths";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -51,7 +52,7 @@ export default function SignInForm() {
 
       saveSession(response.data.accessToken, response.data.data);
 
-      navigate(response.data.data.profileComplete ? PATHS.APP : PATHS.CREATE_WORKSPACE);
+      navigate(PATHS.APP);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }
@@ -59,13 +60,7 @@ export default function SignInForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {formError && (
-        <Alert variant="destructive" className="mb-4">
-          <CircleAlert className="size-4" />
-          <AlertTitle>Unable to sign in</AlertTitle>
-          <AlertDescription>{formError}</AlertDescription>
-        </Alert>
-      )}
+      {formError && <ErrorAlert title="Unable to sign in" message={formError} className="mb-4" />}
 
       <FieldGroup>
         <Field>
