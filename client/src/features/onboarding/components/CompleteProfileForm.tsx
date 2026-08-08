@@ -12,6 +12,13 @@ import {
 
 import { PATHS } from "@/router/paths";
 
+import { apiClient, getApiErrorMessage } from "@/lib/api-client";
+
+import { saveUser } from "@/features/auth/lib/auth-session";
+import type { UpdateProfileResponse } from "@/features/auth/types";
+
+import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -20,8 +27,8 @@ import { Input } from "@/components/ui/input";
 export default function CompleteProfileForm() {
   const navigate = useNavigate();
 
-  const [avatar, setAvatar] = useState<File | undefined>(undefined);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,8 +62,6 @@ export default function CompleteProfileForm() {
       return;
     }
 
-    setAvatar(file);
-
     if (avatarPreview) {
       URL.revokeObjectURL(avatarPreview);
     }
@@ -65,8 +70,6 @@ export default function CompleteProfileForm() {
   }
 
   function handleRemoveAvatar() {
-    setAvatar(undefined);
-
     if (avatarPreview) {
       URL.revokeObjectURL(avatarPreview);
     }
@@ -79,15 +82,28 @@ export default function CompleteProfileForm() {
   }
 
   async function onSubmit(data: CompleteProfileFormValues) {
-    console.log({ ...data, avatar });
+    setFormError(undefined);
 
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const response = await apiClient.patch<UpdateProfileResponse>("/users/me", {
+        username: data.username,
+        title: data.title || undefined,
+      });
 
-    navigate(PATHS.APP);
+      saveUser(response.data.data);
+
+      navigate(PATHS.APP);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
+    }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {formError && (
+        <ErrorAlert title="Unable to save profile" message={formError} className="mb-4" />
+      )}
+
       <FieldGroup>
         <div className="flex flex-col items-center gap-3">
           <button

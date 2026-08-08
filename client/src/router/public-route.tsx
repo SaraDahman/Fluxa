@@ -1,16 +1,18 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-import { getAccessToken, getStoredUser } from "@/features/auth/lib/auth-session";
+import { FullPageLoader } from "@/shared/components/common/FullPageLoader";
 
-import { PATHS } from "./paths";
+import { useOnboardingStatus } from "@/features/auth/lib/use-onboarding-status";
 
 export default function PublicRoute() {
-  const isAuthenticated = getAccessToken() !== null;
+  const { status, targetPath } = useOnboardingStatus();
 
-  if (isAuthenticated) {
-    const user = getStoredUser();
+  if (status === "loading") {
+    return <FullPageLoader />;
+  }
 
-    return <Navigate to={user?.profileComplete ? PATHS.APP : PATHS.CREATE_WORKSPACE} replace />;
+  if (status === "authenticated") {
+    return <Navigate to={targetPath} replace />;
   }
 
   return <Outlet />;
