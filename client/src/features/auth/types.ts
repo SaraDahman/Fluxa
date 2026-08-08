@@ -4,7 +4,6 @@ export interface AuthUser {
   username: string | null;
   title: string | null;
   avatar: string | null;
-  role: string | null;
   profileComplete: boolean;
   createdAt: string;
   updatedAt: string;
