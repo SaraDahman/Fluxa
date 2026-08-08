@@ -1,0 +1,147 @@
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskType {
+  TASK
+  BUG
+  STORY
+  EPIC
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  workspaceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members   TeamMember[]
+  projects  Project[]
+
+  @@index([workspaceId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  key         String
+  description String?
+  workspaceId String
+  teamId      String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  team         Team?     @relation(fields: [teamId], references: [id])
+  createdByUser User     @relation(fields: [createdBy], references: [id])
+  boards       Board[]
+  sprints      Sprint[]
+  labels       Label[]
+  tasks        Task[]
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId])
+  @@map("projects")
+}
+
+model Board {
+  id        String   @id @default(uuid())
+  name      String   @default("Board")
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns Column[]
+
+  @@index([projectId])
+  @@map("boards")
+}
+
+model Column {
+  id        String     @id @default(uuid())
+  name      String
+  status    TaskStatus
+  position  Int
+  color     String?
+  wipLimit  Int?
+  boardId   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@unique([boardId, position])
+  @@index([boardId])
+  @@map("columns")
+}
+
+model Sprint {
+  id        String       @id @default(uuid())
+  name      String
+  goal      String?
+  projectId String
+  status    SprintStatus @default(PLANNED)
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId, status])
+  @@map("sprints")
+}
+
+model Label {
+  id        String   @id @default(uuid())
+  name      String
+  color     String?
+  projectId String
+  createdAt DateTime @default(now())
+
+  project Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   TaskLabel[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@map("labels")
+}

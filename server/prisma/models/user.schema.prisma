@@ -1,12 +1,23 @@
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
+  id              String              @id @default(uuid())
+  email           String              @unique
   password        String
-  username        String?   @unique
+  username        String?             @unique
   title           String?
   avatar          String?
-  role            String?
-  profileComplete Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  profileComplete Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  memberships      WorkspaceMember[]
+  teamMemberships  TeamMember[]
+  ownedWorkspaces  Workspace[]            @relation("WorkspaceOwner")
+  invitationsSent  WorkspaceInvitation[]  @relation("Inviter")
+  createdProjects  Project[]
+  reportedTasks    Task[]                 @relation("TaskReporter")
+  taskAssignments  TaskAssignee[]
+  taskComments     TaskComment[]
+  taskActivities   TaskActivity[]
+  uploads          Attachment[]
+  notifications    Notification[]
 }
