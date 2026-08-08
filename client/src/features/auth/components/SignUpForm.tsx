@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, CircleAlert, Loader2, Lock, Mail } from "lucide-react";
+import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,8 @@ import { PasswordInput } from "./PasswordInput";
 
 import { PATHS } from "@/router/paths";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -90,7 +91,7 @@ export default function SignUpForm() {
 
       saveSession(response.data.accessToken, response.data.data);
 
-      navigate(response.data.data.profileComplete ? PATHS.APP : PATHS.CREATE_WORKSPACE);
+      navigate(PATHS.APP);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }
@@ -99,11 +100,7 @@ export default function SignUpForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       {formError && (
-        <Alert variant="destructive" className="mb-4">
-          <CircleAlert className="size-4" />
-          <AlertTitle>Unable to create account</AlertTitle>
-          <AlertDescription>{formError}</AlertDescription>
-        </Alert>
+        <ErrorAlert title="Unable to create account" message={formError} className="mb-4" />
       )}
 
       <FieldGroup>
