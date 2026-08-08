@@ -15,3 +15,9 @@ export interface AuthResponse {
   data: AuthUser;
   accessToken: string;
 }
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  message: string;
+  data: AuthUser;
+}

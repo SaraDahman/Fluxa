@@ -37,6 +37,12 @@ async function resolveUniqueSlug(baseSlug: string): Promise<string> {
 
 export const workspaceService = {
   async createWorkspace(userId: string, data: CreateWorkspaceBody): Promise<WorkspaceWithRole> {
+    const nameTaken = await workspaceRepository.findByOwnerAndName(userId, data.name);
+
+    if (nameTaken) {
+      throw new ApiError(409, "You already have a workspace with this name");
+    }
+
     const baseSlug = data.slug ?? slugify(data.name);
     const slug = await resolveUniqueSlug(baseSlug);
 
