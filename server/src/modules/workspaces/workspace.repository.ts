@@ -1,4 +1,14 @@
+import type { MemberRole } from "../../../generated/prisma/enums";
+
 import { prisma } from "../../lib/prisma";
+
+const userSelect = {
+  id: true,
+  email: true,
+  username: true,
+  title: true,
+  avatar: true,
+} as const;
 
 export const workspaceRepository = {
   findBySlug(slug: string) {
@@ -46,6 +56,38 @@ export const workspaceRepository = {
       });
 
       return membership;
+    });
+  },
+
+  listMembers(workspaceId: string) {
+    return prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      include: { user: { select: userSelect } },
+      orderBy: { createdAt: "asc" },
+    });
+  },
+
+  findMember(workspaceId: string, userId: string) {
+    return prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } },
+    });
+  },
+
+  countOwners(workspaceId: string) {
+    return prisma.workspaceMember.count({ where: { workspaceId, role: "OWNER" } });
+  },
+
+  updateMemberRole(workspaceId: string, userId: string, role: MemberRole) {
+    return prisma.workspaceMember.update({
+      where: { workspaceId_userId: { workspaceId, userId } },
+      data: { role },
+      include: { user: { select: userSelect } },
+    });
+  },
+
+  removeMember(workspaceId: string, userId: string) {
+    return prisma.workspaceMember.delete({
+      where: { workspaceId_userId: { workspaceId, userId } },
     });
   },
 };
