@@ -10,6 +10,7 @@ import AuthLayout from "@/features/auth/components/AuthLayout";
 import CreateWorkspace from "@/features/onboarding/pages/CreateWorkspace";
 import CompleteProfile from "@/features/onboarding/pages/CompleteProfile";
 import AppPage from "@/features/app/pages/App";
+import AcceptInvitationPage from "@/features/invitations/pages/AcceptInvitation";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,11 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+
+  {
+    element: <AuthLayout />,
+    children: [{ path: PATHS.INVITATION_ACCEPT, element: <AcceptInvitationPage /> }],
   },
 
   {

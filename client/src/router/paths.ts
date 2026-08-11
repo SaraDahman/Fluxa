@@ -6,6 +6,8 @@ export const PATHS = {
   SIGN_UP: "/sign-up",
   FORGOT_PASSWORD: "/forgot-password",
 
+  INVITATION_ACCEPT: "/invitations/accept",
+
   CREATE_WORKSPACE: "/create-workspace",
   COMPLETE_PROFILE: "/complete-profile",
 } as const;
