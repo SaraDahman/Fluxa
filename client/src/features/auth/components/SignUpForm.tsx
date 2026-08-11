@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
@@ -20,6 +20,8 @@ import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+
+import type { InvitationPreviewResponse } from "@/features/invitations/types";
 
 interface Strength {
   score: number;
@@ -56,6 +58,8 @@ const requirements = [
 
 export default function SignUpForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get("token");
 
   const [formError, setFormError] = useState<string | undefined>(undefined);
 
@@ -63,6 +67,7 @@ export default function SignUpForm() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -75,6 +80,30 @@ export default function SignUpForm() {
 
     mode: "onSubmit",
   });
+
+  const [invitationEmail, setInvitationEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!invitationToken) return;
+
+    let cancelled = false;
+
+    apiClient
+      .get<InvitationPreviewResponse>(`/invitations/${invitationToken}`)
+      .then((response) => {
+        if (cancelled) return;
+
+        setInvitationEmail(response.data.data.email);
+        setValue("email", response.data.data.email, { shouldValidate: false });
+      })
+      .catch(() => {
+        if (!cancelled) setFormError("This invitation is invalid or no longer available.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [invitationToken, setValue]);
 
   const password = watch("password");
 
@@ -91,7 +120,7 @@ export default function SignUpForm() {
 
       saveSession(response.data.accessToken, response.data.data);
 
-      navigate(PATHS.APP);
+      navigate(invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.APP);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }
@@ -116,11 +145,18 @@ export default function SignUpForm() {
               autoComplete="email"
               placeholder="you@company.com"
               className="pl-9"
+              disabled={invitationEmail !== null}
               {...register("email")}
             />
           </div>
 
-          <FieldError>{errors.email?.message}</FieldError>
+          {invitationEmail !== null ? (
+            <p className="text-xs text-muted-foreground">
+              Email is locked to the email the invitation was sent to.
+            </p>
+          ) : (
+            <FieldError>{errors.email?.message}</FieldError>
+          )}
         </Field>
 
         <Field>
