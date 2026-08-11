@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import MarkerText from "../components/MarkerText";
 import GoogleButton from "../components/GoogleButton";
 import GitHubButton from "../components/GithubButton";
@@ -6,6 +6,11 @@ import SignUpForm from "../components/SignUpForm";
 import FormHeader from "../components/FormHeader";
 
 export default function SignUpPage() {
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get("token");
+
+  const signInPath = invitationToken ? `/sign-in?token=${invitationToken}` : "/sign-in";
+
   return (
     <div className="space-y-7">
       <FormHeader
@@ -25,7 +30,7 @@ export default function SignUpPage() {
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          to="/sign-in"
+          to={signInPath}
           className="font-medium text-primary transition-colors hover:text-primary/80"
         >
           Sign in
