@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 
 import { useForm } from "react-hook-form";
@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 
 export default function SignInForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get("token");
 
   const [formError, setFormError] = useState<string | undefined>(undefined);
 
@@ -52,7 +54,7 @@ export default function SignInForm() {
 
       saveSession(response.data.accessToken, response.data.data);
 
-      navigate(PATHS.APP);
+      navigate(invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.APP);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }

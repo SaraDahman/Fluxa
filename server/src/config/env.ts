@@ -12,4 +12,7 @@ export const env = {
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
   BCRYPT_SALT_ROUNDS: Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
+
+  RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+  EMAIL_FROM: process.env.EMAIL_FROM || "Fluxa <onboarding@fluxa.app>",
 };
