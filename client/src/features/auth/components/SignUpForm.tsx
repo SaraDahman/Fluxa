@@ -120,7 +120,9 @@ export default function SignUpForm() {
 
       saveSession(response.data.accessToken, response.data.data);
 
-      navigate(invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.APP);
+      navigate(
+        invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.MY_TASKS
+      );
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }

@@ -92,7 +92,7 @@ export default function CompleteProfileForm() {
 
       saveUser(response.data.data);
 
-      navigate(PATHS.APP);
+      navigate(PATHS.MY_TASKS);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }
