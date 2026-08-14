@@ -18,6 +18,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -147,6 +150,11 @@
   --sidebar-border: #e2e2e6;
   --sidebar-ring: #5b5fef;
 
+  /* sidebar colors */
+  --sidebar-muted: #6e6e7b;
+  --sidebar-hover: #f4f4f6;
+  --sidebar-active: #ebebfd;
+
   /* Your custom showcase tokens */
   --showcase-bg: linear-gradient(160deg, #2d2d9a 0%, #1f1f6b 100%);
   --showcase-text: #ffffff;
@@ -194,6 +202,11 @@
   --sidebar-accent-foreground: #ddddf0;
   --sidebar-border: #181828;
   --sidebar-ring: #5b5fef;
+
+  /* sidebar tokens */
+  --sidebar-muted: #8888aa;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: rgba(255, 255, 255, 0.08);
 
   /* Your custom showcase tokens */
   --showcase-bg: linear-gradient(160deg, #0c0c18 0%, #10101c 100%);

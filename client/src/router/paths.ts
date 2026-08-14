@@ -1,6 +1,8 @@
 export const PATHS = {
   HOME: "/",
-  APP: "/app",
+
+  // Temporary: uses a dummy workspace id until real workspace routing lands.
+  MY_TASKS: "/workspace/dummy/my-tasks",
 
   SIGN_IN: "/sign-in",
   SIGN_UP: "/sign-up",
