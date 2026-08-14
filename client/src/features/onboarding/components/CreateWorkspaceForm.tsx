@@ -49,7 +49,7 @@ export default function CreateWorkspaceForm() {
         name: data.name,
       });
 
-      navigate(PATHS.APP);
+      navigate(PATHS.MY_TASKS);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }

@@ -9,8 +9,12 @@ import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 import AuthLayout from "@/features/auth/components/AuthLayout";
 import CreateWorkspace from "@/features/onboarding/pages/CreateWorkspace";
 import CompleteProfile from "@/features/onboarding/pages/CompleteProfile";
-import AppPage from "@/features/app/pages/App";
 import AcceptInvitationPage from "@/features/invitations/pages/AcceptInvitation";
+import AppLayout from "@/app/layouts/Applayout";
+import MyTasksPage from "@/features/tasks/pages/MyTasks";
+import BoardsPage from "@/features/boards/pages/Boards";
+import BacklogPage from "@/features/backlog/pages/Backlog";
+import SprintsPage from "@/features/sprints/pages/Sprints";
 
 export const router = createBrowserRouter([
   {
@@ -43,8 +47,17 @@ export const router = createBrowserRouter([
           { path: PATHS.COMPLETE_PROFILE, element: <CompleteProfile /> },
         ],
       },
-
-      { path: PATHS.APP, element: <AppPage /> },
+      {
+        path: "/workspace/:workspaceId",
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <MyTasksPage /> },
+          { path: "my-tasks", element: <MyTasksPage /> },
+          { path: "boards", element: <BoardsPage /> },
+          { path: "backlog", element: <BacklogPage /> },
+          { path: "sprints", element: <SprintsPage /> },
+        ],
+      },
     ],
   },
 

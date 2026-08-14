@@ -5,6 +5,7 @@ import { apiClient, getApiErrorMessage } from "@/lib/api-client";
 
 import { clearSession, getAccessToken, saveUser } from "@/features/auth/lib/auth-session";
 import type { AuthUser } from "@/features/auth/types";
+import type { WorkspaceWithRole } from "@/features/workspaces/types";
 
 import { PATHS } from "@/router/paths";
 
@@ -26,7 +27,10 @@ type AuthStatus = "authenticated" | "unauthenticated";
 
 type GetMeResponse = {
   success: boolean;
-  data: AuthUser;
+  data: {
+    user: AuthUser;
+    workspaces: WorkspaceWithRole[];
+  };
 };
 
 function getStatusMessage(status: InvitationStatus): string {
@@ -74,7 +78,7 @@ export default function AcceptInvitationPage() {
       try {
         const response = await apiClient.get<GetMeResponse>("/auth/me");
 
-        return { status: "authenticated", user: response.data.data };
+        return { status: "authenticated", user: response.data.data.user };
       } catch {
         clearSession();
 
@@ -132,7 +136,7 @@ export default function AcceptInvitationPage() {
     try {
       await apiClient.post<AcceptInvitationResponse>("/invitations/accept", { token });
 
-      navigate(PATHS.APP);
+      navigate(PATHS.MY_TASKS);
     } catch (error) {
       setAcceptError(getApiErrorMessage(error, "We couldn't accept this invitation."));
     } finally {

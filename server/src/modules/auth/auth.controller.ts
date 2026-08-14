@@ -6,6 +6,8 @@ import { env } from "../../config/env";
 
 import { authService } from "./auth.service";
 
+import { workspaceService } from "../workspaces/workspace.service";
+
 import type { SignInBody } from "./dto/signIn.schema";
 import type { SignUpBody } from "./dto/signUp.schema";
 import type { AuthenticatedRequest } from "./types";
@@ -98,11 +100,16 @@ export const authController = {
   },
 
   async getMe(req: AuthenticatedRequest, res: Response) {
-    const user = await authService.getUserById(req.user!.userId);
+    const userId = req.user!.userId;
+
+    const [user, workspaces] = await Promise.all([
+      authService.getUserById(userId),
+      workspaceService.listWorkspaces(userId),
+    ]);
 
     res.json({
       success: true,
-      data: user,
+      data: { user, workspaces },
     });
   },
 };

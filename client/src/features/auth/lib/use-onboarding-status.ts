@@ -6,27 +6,24 @@ import { apiClient } from "@/lib/api-client";
 import type { AuthUser } from "@/features/auth/types";
 import type { WorkspaceWithRole } from "@/features/workspaces/types";
 
-import { PATHS } from "@/router/paths";
-
 import { clearSession, getAccessToken, saveUser } from "./auth-session";
 
 type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 
 type GetMeResponse = {
   success: boolean;
-  data: AuthUser;
-};
-
-type ListWorkspacesResponse = {
-  success: boolean;
-  data: WorkspaceWithRole[];
+  data: {
+    user: AuthUser;
+    workspaces: WorkspaceWithRole[];
+  };
 };
 
 export function useOnboardingStatus() {
   const location = useLocation();
 
   const [status, setStatus] = useState<SessionStatus>("loading");
-  const [targetPath, setTargetPath] = useState<string>(PATHS.APP);
+  const [hasWorkspace, setHasWorkspace] = useState(false);
+  const [profileComplete, setProfileComplete] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,22 +37,16 @@ export function useOnboardingStatus() {
       setStatus("loading");
 
       try {
-        const [userRes, workspacesRes] = await Promise.all([
-          apiClient.get<GetMeResponse>("/auth/me"),
-          apiClient.get<ListWorkspacesResponse>("/workspaces"),
-        ]);
+        const response = await apiClient.get<GetMeResponse>("/auth/me");
 
         if (cancelled) return;
 
-        const user = userRes.data.data;
-        const hasWorkspace = workspacesRes.data.data.length > 0;
+        const { user, workspaces } = response.data.data;
 
         saveUser(user);
 
-        if (!hasWorkspace) setTargetPath(PATHS.CREATE_WORKSPACE);
-        else if (!user.profileComplete) setTargetPath(PATHS.COMPLETE_PROFILE);
-        else setTargetPath(PATHS.APP);
-
+        setHasWorkspace(workspaces.length > 0);
+        setProfileComplete(user.profileComplete);
         setStatus("authenticated");
       } catch {
         clearSession();
@@ -71,5 +62,5 @@ export function useOnboardingStatus() {
     };
   }, [location.pathname]);
 
-  return { status, targetPath };
+  return { status, hasWorkspace, profileComplete };
 }
