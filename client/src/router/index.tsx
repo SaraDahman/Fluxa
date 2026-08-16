@@ -9,6 +9,7 @@ import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 import AuthLayout from "@/features/auth/components/AuthLayout";
 import CreateWorkspace from "@/features/onboarding/pages/CreateWorkspace";
 import CompleteProfile from "@/features/onboarding/pages/CompleteProfile";
+import SelectWorkspace from "@/features/workspaces/pages/SelectWorkspace";
 import AcceptInvitationPage from "@/features/invitations/pages/AcceptInvitation";
 import AppLayout from "@/app/layouts/Applayout";
 import MyTasksPage from "@/features/tasks/pages/MyTasks";
@@ -47,8 +48,9 @@ export const router = createBrowserRouter([
           { path: PATHS.COMPLETE_PROFILE, element: <CompleteProfile /> },
         ],
       },
+      { path: PATHS.SELECT_WORKSPACE, element: <SelectWorkspace /> },
       {
-        path: "/workspace/:workspaceId",
+        path: "/:workspaceSlug",
         element: <AppLayout />,
         children: [
           { index: true, element: <MyTasksPage /> },

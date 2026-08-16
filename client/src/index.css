@@ -5,6 +5,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+button {
+  cursor: pointer;
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   /* Keeps shadcn's layout font but falls back to your custom system-ui list */
