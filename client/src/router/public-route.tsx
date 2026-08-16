@@ -1,19 +1,20 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 import { FullPageLoader } from "@/shared/components/common/FullPageLoader";
 
-import { useOnboardingStatus } from "@/features/auth/lib/use-onboarding-status";
+import { useMe } from "@/features/auth/api/auth";
 
 import ProtectedRoute from "./protected-route";
 
 export default function PublicRoute() {
-  const { status } = useOnboardingStatus();
+  const location = useLocation();
+  const { data, isLoading } = useMe();
 
-  if (status === "loading") {
+  if (isLoading) {
     return <FullPageLoader />;
   }
 
-  if (status === "authenticated") {
+  if (data) {
     return <ProtectedRoute />;
   }
 

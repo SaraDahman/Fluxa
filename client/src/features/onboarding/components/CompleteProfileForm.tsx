@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Briefcase, Camera, Loader2, UserRound } from "lucide-react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -10,12 +11,12 @@ import {
   type CompleteProfileFormValues,
 } from "../schemas/complete-profile.schema";
 
-import { PATHS } from "@/router/paths";
-
 import { apiClient, getApiErrorMessage } from "@/lib/api-client";
 
 import { saveUser } from "@/features/auth/lib/auth-session";
 import type { UpdateProfileResponse } from "@/features/auth/types";
+
+import { useWorkspaceStore } from "@/store/workspace.store";
 
 import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
 
@@ -26,6 +27,8 @@ import { Input } from "@/components/ui/input";
 
 export default function CompleteProfileForm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { activeWorkspaceSlug } = useWorkspaceStore();
 
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
   const [formError, setFormError] = useState<string | undefined>(undefined);
@@ -91,8 +94,9 @@ export default function CompleteProfileForm() {
       });
 
       saveUser(response.data.data);
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
 
-      navigate(PATHS.MY_TASKS);
+      navigate(`/${activeWorkspaceSlug}/my-tasks`);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }
