@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Building2, Loader2 } from "lucide-react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -10,9 +11,9 @@ import {
   type CreateWorkspaceFormValues,
 } from "../schemas/create-workspace.schema";
 
-import { PATHS } from "@/router/paths";
-
 import { apiClient, getApiErrorMessage } from "@/lib/api-client";
+
+import { useWorkspaceStore } from "@/store/workspace.store";
 
 import { ErrorAlert } from "@/shared/components/common/ErrorAlert";
 
@@ -24,6 +25,8 @@ import type { CreateWorkspaceResponse } from "@/features/workspaces/types";
 
 export default function CreateWorkspaceForm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { setActiveWorkspace } = useWorkspaceStore();
 
   const [formError, setFormError] = useState<string | undefined>(undefined);
 
@@ -45,11 +48,16 @@ export default function CreateWorkspaceForm() {
     setFormError(undefined);
 
     try {
-      await apiClient.post<CreateWorkspaceResponse>("/workspaces", {
+      const response = await apiClient.post<CreateWorkspaceResponse>("/workspaces", {
         name: data.name,
       });
 
-      navigate(PATHS.MY_TASKS);
+      const { workspace } = response.data.data;
+
+      setActiveWorkspace({ id: workspace.id, slug: workspace.slug });
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+
+      navigate(`/${workspace.slug}/my-tasks`);
     } catch (error) {
       setFormError(getApiErrorMessage(error));
     }

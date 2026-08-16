@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -24,6 +25,7 @@ import { Input } from "@/components/ui/input";
 
 export default function SignInForm() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const invitationToken = searchParams.get("token");
 
@@ -53,9 +55,10 @@ export default function SignInForm() {
       });
 
       saveSession(response.data.accessToken, response.data.data);
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
 
       navigate(
-        invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.MY_TASKS
+        invitationToken ? `${PATHS.INVITATION_ACCEPT}?token=${invitationToken}` : PATHS.HOME
       );
     } catch (error) {
       setFormError(getApiErrorMessage(error));

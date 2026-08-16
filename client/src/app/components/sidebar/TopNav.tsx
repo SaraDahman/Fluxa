@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn, isRouteActive } from "@/lib/utils";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import {
   CalendarDays,
   KanbanSquare,
@@ -24,36 +24,37 @@ interface NavItem {
   badge?: number;
 }
 
-const items: NavItem[] = [
-  {
-    id: "my-tasks",
-    label: "My Tasks",
-    icon: StickyNotes,
-    path: "/workspace/:workspaceId/my-tasks",
-    badge: 0,
-  },
-  {
-    id: "boards",
-    label: "Boards",
-    icon: KanbanSquare,
-    path: "/workspace/:workspaceId/boards",
-  },
-  {
-    id: "backlog",
-    label: "Backlog",
-    icon: LayoutDashboard,
-    path: "/workspace/:workspaceId/backlog",
-  },
-  {
-    id: "sprints",
-    label: "Sprints",
-    icon: CalendarDays,
-    path: "/workspace/:workspaceId/sprints",
-  },
-];
-
 export default function TopNav() {
   const { pathname } = useLocation();
+  const { workspaceSlug } = useParams();
+
+  const items: NavItem[] = [
+    {
+      id: "my-tasks",
+      label: "My Tasks",
+      icon: StickyNotes,
+      path: `/${workspaceSlug}/my-tasks`,
+      badge: 0,
+    },
+    {
+      id: "boards",
+      label: "Boards",
+      icon: KanbanSquare,
+      path: `/${workspaceSlug}/boards`,
+    },
+    {
+      id: "backlog",
+      label: "Backlog",
+      icon: LayoutDashboard,
+      path: `/${workspaceSlug}/backlog`,
+    },
+    {
+      id: "sprints",
+      label: "Sprints",
+      icon: CalendarDays,
+      path: `/${workspaceSlug}/sprints`,
+    },
+  ];
 
   return (
     <SidebarGroup key="top-nav">
@@ -61,7 +62,7 @@ export default function TopNav() {
         <SidebarMenu className="space-y-1">
           {items.map((item) => {
             const isActive = isRouteActive(
-              item.id === "my-tasks" ? [item.path, "/workspace/:workspaceId"] : item.path,
+              item.id === "my-tasks" ? [item.path, `/${workspaceSlug}`] : item.path,
               pathname
             );
 

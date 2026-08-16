@@ -1,7 +1,7 @@
 import type { AuthUser } from "../types";
 
-const ACCESS_TOKEN_KEY = "fluxa.accessToken";
-const USER_KEY = "fluxa.user";
+const ACCESS_TOKEN_KEY = "fluxa-accessToken";
+const USER_KEY = "fluxa-user";
 
 export function saveSession(accessToken: string, user: AuthUser) {
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { apiClient, getApiErrorMessage } from "@/lib/api-client";
 
 import { clearSession, getAccessToken, saveUser } from "@/features/auth/lib/auth-session";
 import type { AuthUser } from "@/features/auth/types";
-import type { WorkspaceWithRole } from "@/features/workspaces/types";
 
-import { PATHS } from "@/router/paths";
+import { useWorkspaceStore } from "@/store/workspace.store";
 
 import { Spinner } from "@/components/ui/spinner";
 
@@ -22,16 +23,9 @@ import type {
   InvitationPreviewResponse,
   InvitationStatus,
 } from "../types";
+import type { GetMeResponse } from "@/features/auth/api/auth";
 
 type AuthStatus = "authenticated" | "unauthenticated";
-
-type GetMeResponse = {
-  success: boolean;
-  data: {
-    user: AuthUser;
-    workspaces: WorkspaceWithRole[];
-  };
-};
 
 function getStatusMessage(status: InvitationStatus): string {
   switch (status) {
@@ -48,6 +42,8 @@ function getStatusMessage(status: InvitationStatus): string {
 
 export default function AcceptInvitationPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { setActiveWorkspace } = useWorkspaceStore();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
@@ -134,9 +130,24 @@ export default function AcceptInvitationPage() {
     setAcceptError(null);
 
     try {
-      await apiClient.post<AcceptInvitationResponse>("/invitations/accept", { token });
+      const response = await apiClient.post<AcceptInvitationResponse>("/invitations/accept", {
+        token,
+      });
 
-      navigate(PATHS.MY_TASKS);
+      const { workspaceId } = response.data.data;
+
+      const meData = await queryClient.fetchQuery<GetMeResponse>({
+        queryKey: ["auth", "me"],
+      });
+
+      const workspace = meData.data.workspaces.find((w) => w.workspace.id === workspaceId);
+
+      if (workspace) {
+        setActiveWorkspace({ id: workspace.workspace.id, slug: workspace.workspace.slug });
+        navigate(`/${workspace.workspace.slug}/my-tasks`);
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       setAcceptError(getApiErrorMessage(error, "We couldn't accept this invitation."));
     } finally {
