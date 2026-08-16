@@ -90,7 +90,7 @@ export default function Workspaceswitcher() {
                         className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white"
                         style={{ background: "#5B5FEF" }}
                       >
-                        {w.workspace.slug.slice(0, 2)}
+                        {w.workspace.name[0].toUpperCase()}
                       </div>
 
                       <div className="min-w-0 flex-1">
