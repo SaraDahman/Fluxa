@@ -1,5 +1,7 @@
 import { prisma } from "../../lib/prisma";
 
+import type { CreateInvitationData, UpdateInvitationData } from "./types";
+
 export const invitationRepository = {
   findByToken(token: string) {
     return prisma.workspaceInvitation.findUnique({
@@ -22,27 +24,13 @@ export const invitationRepository = {
     });
   },
 
-  create(data: {
-    workspaceId: string;
-    email: string;
-    token: string;
-    role: "ADMIN" | "MEMBER";
-    invitedById: string;
-    expiresAt: Date;
-  }) {
+  create(data: CreateInvitationData) {
     return prisma.workspaceInvitation.create({
       data,
     });
   },
 
-  update(
-    id: string,
-    data: {
-      token: string;
-      role: "ADMIN" | "MEMBER";
-      expiresAt: Date;
-    }
-  ) {
+  update(id: string, data: UpdateInvitationData) {
     return prisma.workspaceInvitation.update({
       where: { id },
       data: {

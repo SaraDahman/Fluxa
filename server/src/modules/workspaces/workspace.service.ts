@@ -1,36 +1,11 @@
 import type { MemberRole } from "../../../generated/prisma/enums";
-import type { WorkspaceModel } from "../../../generated/prisma/models/Workspace";
 
 import { ApiError } from "../../utils/api-error";
 
 import { workspaceRepository } from "./workspace.repository";
 
 import type { CreateWorkspaceBody } from "./dto/create-workspace.schema";
-
-type WorkspaceWithRole = {
-  workspace: WorkspaceModel;
-  role: MemberRole;
-};
-
-type MemberActor = {
-  userId: string;
-  role: MemberRole;
-};
-
-type WorkspaceMemberWithUser = {
-  id: string;
-  workspaceId: string;
-  userId: string;
-  role: MemberRole;
-  createdAt: Date;
-  user: {
-    id: string;
-    email: string;
-    username: string | null;
-    title: string | null;
-    avatar: string | null;
-  };
-};
+import type { MemberActor, WorkspaceMemberWithUser, WorkspaceWithRole } from "./types";
 
 function slugify(value: string): string {
   const slug = value
@@ -63,11 +38,11 @@ export const workspaceService = {
       throw new ApiError(409, "You already have a workspace with this name");
     }
 
-    const baseSlug = data.slug ?? slugify(data.name);
+    const baseSlug = slugify(data.name);
     const slug = await resolveUniqueSlug(baseSlug);
 
     const membership = await workspaceRepository.createWorkspaceWithOwner({
-      name: data.name,
+      ...data,
       slug,
       createdBy: userId,
     });
@@ -101,16 +76,7 @@ export const workspaceService = {
   },
 
   async listMembers(workspaceId: string): Promise<WorkspaceMemberWithUser[]> {
-    const members = await workspaceRepository.listMembers(workspaceId);
-
-    return members.map((member) => ({
-      id: member.id,
-      workspaceId: member.workspaceId,
-      userId: member.userId,
-      role: member.role,
-      createdAt: member.createdAt,
-      user: member.user,
-    }));
+    return workspaceRepository.listMembers(workspaceId);
   },
 
   async updateMemberRole(
@@ -143,14 +109,7 @@ export const workspaceService = {
 
     const member = await workspaceRepository.updateMemberRole(workspaceId, targetUserId, role);
 
-    return {
-      id: member.id,
-      workspaceId: member.workspaceId,
-      userId: member.userId,
-      role: member.role,
-      createdAt: member.createdAt,
-      user: member.user,
-    };
+    return member;
   },
 
   async removeMember(actor: MemberActor, workspaceId: string, targetUserId: string): Promise<void> {

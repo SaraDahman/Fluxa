@@ -88,7 +88,7 @@ export default function Workspaceswitcher() {
                     >
                       <div
                         className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white"
-                        style={{ background: "#5B5FEF" }}
+                        style={{ background: w.workspace.color }}
                       >
                         {w.workspace.name[0].toUpperCase()}
                       </div>
