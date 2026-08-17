@@ -1,4 +1,3 @@
-import type { InvitationStatus } from "../../../generated/prisma/enums";
 import type { WorkspaceInvitationModel } from "../../../generated/prisma/models/WorkspaceInvitation";
 
 export type InvitationRole = "ADMIN" | "MEMBER";
