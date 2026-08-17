@@ -24,7 +24,7 @@ export function useInviteMember(workspaceId: string) {
   return useMutation({
     mutationFn: async (data: { email: string; role: "MEMBER" | "ADMIN" }) => {
       const response = await apiClient.post<InviteMemberResponse>(
-        `/workspaces/${workspaceId}/invitations`,
+        `/invitations/workspaces/${workspaceId}`,
         data
       );
       return response.data;
