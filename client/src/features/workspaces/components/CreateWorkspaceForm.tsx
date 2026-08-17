@@ -33,7 +33,7 @@ export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorks
 
     defaultValues: {
       name: "",
-      color: "",
+      color: undefined,
     },
 
     mode: "onSubmit",
@@ -41,7 +41,7 @@ export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorks
 
   function onSubmit(_data: CreateWorkspaceFormValues) {
     createWorkspace.mutate(
-      { name: _data.name, color: _data.color || undefined },
+      { name: _data.name, color: _data.color },
       {
         onSuccess: () => {
           onSuccess?.();
