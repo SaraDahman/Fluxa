@@ -6,15 +6,9 @@ export const createWorkspaceSchema = z.object({
     .trim()
     .min(1, "Workspace name is required")
     .max(60, "Workspace name cannot exceed 60 characters"),
-  slug: z
+  color: z
     .string()
-    .trim()
-    .toLowerCase()
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug can only contain lowercase letters, numbers, and hyphens"
-    )
-    .max(60, "Slug cannot exceed 60 characters")
+    .regex(/^#[0-9a-fA-F]{6}$/, "Please select a valid color")
     .optional(),
 });
 

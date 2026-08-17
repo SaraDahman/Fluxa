@@ -2,6 +2,8 @@ import type { MemberRole } from "../../../generated/prisma/enums";
 
 import { prisma } from "../../lib/prisma";
 
+import type { CreateWorkspaceBody } from "./dto/create-workspace.schema";
+
 const userSelect = {
   id: true,
   email: true,
@@ -36,14 +38,10 @@ export const workspaceRepository = {
     });
   },
 
-  createWorkspaceWithOwner(data: { name: string; slug: string; createdBy: string }) {
+  createWorkspaceWithOwner(data: CreateWorkspaceBody & { slug: string; createdBy: string }) {
     return prisma.$transaction(async (tx) => {
       const workspace = await tx.workspace.create({
-        data: {
-          name: data.name,
-          slug: data.slug,
-          createdBy: data.createdBy,
-        },
+        data,
       });
 
       const membership = await tx.workspaceMember.create({

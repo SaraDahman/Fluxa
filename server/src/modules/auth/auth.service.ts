@@ -10,15 +10,7 @@ import { comparePassword, hashPassword } from "./utils/password";
 import type { SignInBody } from "./dto/signIn.schema";
 import type { SignUpBody } from "./dto/signUp.schema";
 
-import type { AuthTokenPayload } from "./types";
-
-type PublicUser = Omit<UserModel, "password">;
-
-type AuthResponse = {
-  user: PublicUser;
-  accessToken: string;
-  refreshToken: string;
-};
+import type { AuthResponse, AuthTokenPayload, PublicUser } from "./types";
 
 function toPublicUser(user: UserModel): PublicUser {
   const { password: _password, ...publicUser } = user;

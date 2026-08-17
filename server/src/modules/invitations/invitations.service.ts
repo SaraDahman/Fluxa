@@ -7,6 +7,8 @@ import { ApiError } from "../../utils/api-error";
 
 import { invitationRepository } from "./invitations.repository";
 
+import type { InvitationRole } from "./types";
+
 const resend = new Resend(env.RESEND_API_KEY);
 
 const INVITATION_EXPIRATION_DAYS = 7;
@@ -33,7 +35,7 @@ export const invitationService = {
     workspaceId: string;
     userId: string;
     email: string;
-    role: "ADMIN" | "MEMBER";
+    role: InvitationRole;
   }) {
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -181,16 +183,7 @@ export const invitationService = {
       throw new ApiError(404, "Invitation not found");
     }
 
-    return {
-      workspace: {
-        id: invitation.workspace.id,
-        name: invitation.workspace.name,
-      },
-      role: invitation.role,
-      email: invitation.email,
-      status: invitation.status,
-      expiresAt: invitation.expiresAt,
-    };
+    return invitation;
   },
 
   async acceptInvitation({ token, userId }: { token: string; userId: string }) {

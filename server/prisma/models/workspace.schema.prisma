@@ -15,6 +15,7 @@ model Workspace {
   id        String   @id @default(uuid())
   name      String
   slug      String   @unique
+  color     String   @default("#6366f1")
   createdBy String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
