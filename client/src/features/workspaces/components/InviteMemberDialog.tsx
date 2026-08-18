@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useWorkspaceStore } from "@/store/workspace.store";
 import InviteMemberForm from "./InviteMemberForm";
 
 interface InviteMemberDialogProps {
@@ -14,6 +15,8 @@ interface InviteMemberDialogProps {
 }
 
 export default function InviteMemberDialog({ open, onOpenChange }: InviteMemberDialogProps) {
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -27,10 +30,13 @@ export default function InviteMemberDialog({ open, onOpenChange }: InviteMemberD
           </DialogDescription>
         </DialogHeader>
 
-        <InviteMemberForm
-          onSuccess={() => onOpenChange(false)}
-          onCancel={() => onOpenChange(false)}
-        />
+        {activeWorkspaceId && (
+          <InviteMemberForm
+            workspaceId={activeWorkspaceId}
+            onSuccess={() => onOpenChange(false)}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

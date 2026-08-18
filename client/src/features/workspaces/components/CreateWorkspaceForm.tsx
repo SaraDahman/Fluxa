@@ -6,6 +6,8 @@ import {
   createWorkspaceSchema,
   type CreateWorkspaceFormValues,
 } from "../schemas/create-workspace.schema";
+import { useCreateWorkspace } from "../api/workspaces";
+import { getApiErrorMessage } from "@/lib/api-client";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -18,28 +20,43 @@ interface CreateWorkspaceFormProps {
 }
 
 export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorkspaceFormProps) {
+  const createWorkspace = useCreateWorkspace();
+
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    setError,
+    formState: { errors },
   } = useForm<CreateWorkspaceFormValues>({
     resolver: zodResolver(createWorkspaceSchema),
 
     defaultValues: {
       name: "",
-      color: "",
+      color: undefined,
     },
 
     mode: "onSubmit",
   });
 
-  async function onSubmit(_data: CreateWorkspaceFormValues) {
-    onSuccess?.();
+  function onSubmit(_data: CreateWorkspaceFormValues) {
+    createWorkspace.mutate(
+      { name: _data.name, color: _data.color },
+      {
+        onSuccess: () => {
+          onSuccess?.();
+        },
+        onError: (error) => {
+          setError("root", { message: getApiErrorMessage(error) });
+        },
+      }
+    );
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="workspace-name">Workspace name</FieldLabel>
@@ -48,6 +65,7 @@ export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorks
             autoFocus
             autoComplete="off"
             placeholder="e.g. Acme Studio"
+            disabled={createWorkspace.isPending}
             {...register("name")}
           />
 
@@ -66,6 +84,7 @@ export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorks
                     type="button"
                     aria-label={`Select color ${c}`}
                     onClick={() => field.onChange(c)}
+                    disabled={createWorkspace.isPending}
                     className="h-6 w-6 rounded-full ring-offset-2 ring-offset-background transition-transform hover:scale-110"
                     style={{
                       background: c,
@@ -82,11 +101,16 @@ export default function CreateWorkspaceForm({ onSuccess, onCancel }: CreateWorks
       </FieldGroup>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={createWorkspace.isPending}
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
+        <Button type="submit" disabled={createWorkspace.isPending}>
+          {createWorkspace.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <ArrowRight className="h-4 w-4" />

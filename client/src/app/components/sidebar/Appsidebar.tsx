@@ -8,8 +8,9 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import Workspaceswitcher from "../../../features/workspaces/components/Workspaceswitcher";
-
+import TeamsNav from "./TeamsNav";
 import TopNav from "./TopNav";
+import UserNav from "./UserNav";
 
 export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -19,8 +20,11 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
       </SidebarHeader>
       <SidebarContent>
         <TopNav />
+        <TeamsNav />
       </SidebarContent>
-      <SidebarFooter>{/* <NavUser user={data.user} /> */}</SidebarFooter>
+      <SidebarFooter>
+        <UserNav />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

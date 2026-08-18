@@ -1,14 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+import { ThemeContext } from "./use-theme";
 
-interface ThemeContextValue {
-  theme: Theme;
-  setTheme: (t: Theme) => void;
-  toggle: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "fluxa-theme";
 
@@ -35,10 +29,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggle }}>{children}</ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within a ThemeProvider");
-  return ctx;
 }

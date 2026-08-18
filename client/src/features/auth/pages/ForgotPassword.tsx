@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Mail } from "lucide-react";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -22,7 +22,7 @@ export default function ForgotPasswordForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -32,7 +32,7 @@ export default function ForgotPasswordForm() {
     mode: "onBlur",
   });
 
-  const email = watch("email");
+  const email = useWatch({ control, name: "email" });
 
   async function onSubmit(data: ForgotPasswordFormValues) {
     console.log(data);

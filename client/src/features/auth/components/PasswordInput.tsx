@@ -6,7 +6,7 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   label?: string;
 }
 
-export function PasswordInput({ label, className, ...props }: PasswordInputProps) {
+export function PasswordInput({ className, ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative">
