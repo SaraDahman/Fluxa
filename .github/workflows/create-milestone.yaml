@@ -56,7 +56,7 @@ jobs:
 
           for i in $(seq 0 $(( ISSUE_COUNT - 1 ))); do
             ISSUE_TITLE=$(yq ".issues[$i].title" "$FILE")
-            ISSUE_DESC=$(yq ".issues[$i].description // "" | sub("\n$"; "")" "$FILE")
+            ISSUE_DESC=$(yq ".issues[$i].description // \"\"" "$FILE")
             LABEL_COUNT=$(yq ".issues[$i].labels | length // 0" "$FILE")
             CHILD_COUNT=$(yq ".issues[$i].children | length // 0" "$FILE")
 
@@ -74,7 +74,7 @@ jobs:
             if [ "$CHILD_COUNT" != "null" ] && [ "$CHILD_COUNT" -gt 0 ]; then
               for j in $(seq 0 $(( CHILD_COUNT - 1 ))); do
                 CHILD_TITLE=$(yq ".issues[$i].children[$j].title" "$FILE")
-                CHILD_DESC=$(yq ".issues[$i].children[$j].description // "" | sub("\n$"; "")" "$FILE")
+                CHILD_DESC=$(yq ".issues[$i].children[$j].description // \"\"" "$FILE")
 
                 echo "  Creating child: $CHILD_TITLE"
                 CHILD_NUMBER=$(gh issue create \
