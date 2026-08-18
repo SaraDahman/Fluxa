@@ -7,7 +7,7 @@ import { ApiError } from "../../utils/api-error";
 
 import { invitationRepository } from "./invitations.repository";
 
-import type { InvitationRole } from "./types";
+import type { InvitationRole, InvitationPreviewDto } from "./types";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -176,14 +176,20 @@ export const invitationService = {
     return invitation;
   },
 
-  async getInvitationByToken(token: string) {
+  async getInvitationByToken(token: string): Promise<InvitationPreviewDto> {
     const invitation = await invitationRepository.findByToken(token);
 
     if (!invitation) {
       throw new ApiError(404, "Invitation not found");
     }
 
-    return invitation;
+    return {
+      workspace: { id: invitation.workspace.id, name: invitation.workspace.name },
+      role: invitation.role as InvitationRole,
+      email: invitation.email,
+      status: invitation.status,
+      expiresAt: invitation.expiresAt,
+    };
   },
 
   async acceptInvitation({ token, userId }: { token: string; userId: string }) {
