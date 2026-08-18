@@ -15,6 +15,7 @@ permissions:
 jobs:
   create-milestone:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,92 +26,177 @@ jobs:
             https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Create milestone
-        id: milestone
+      - name: Create milestone and issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
           FILE="${{ inputs.milestone_file }}"
+
+          # --------------------------------------------------
+          # Validate input file
+          # --------------------------------------------------
 
           if [ ! -f "$FILE" ]; then
             echo "::error::File not found: $FILE"
             exit 1
           fi
 
-          TITLE=$(yq '.title' "$FILE")
-          DESC=$(yq '.description // ""' "$FILE")
+          echo "Using milestone file: $FILE"
+          echo ""
 
+          # --------------------------------------------------
+          # Read milestone information
+          # --------------------------------------------------
+
+          TITLE=$(yq -r '.title' "$FILE")
+          DESC=$(yq -r '.description // ""' "$FILE")
+
+          if [ -z "$TITLE" ] || [ "$TITLE" = "null" ]; then
+            echo "::error::Milestone title is missing"
+            exit 1
+          fi
+
+          echo "========================================="
           echo "Creating milestone: $TITLE"
-          NUMBER=$(gh api "repos/{owner}/{repo}/milestones" \
+          echo "========================================="
+
+          # --------------------------------------------------
+          # Create milestone
+          # --------------------------------------------------
+
+          MILESTONE_NUMBER=$(gh api \
+            "repos/{owner}/{repo}/milestones" \
             -f title="$TITLE" \
             -f description="$DESC" \
             -f state="open" \
             --jq '.number')
 
-          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
-          echo "Created milestone #$NUMBER"
+          echo "Created milestone #$MILESTONE_NUMBER"
+          echo ""
 
-      - name: Create issues
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MILESTONE: ${{ steps.milestone.outputs.number }}
-        run: |
-          FILE="${{ inputs.milestone_file }}"
-          ISSUE_COUNT=$(yq '.issues | length' "$FILE")
+          # --------------------------------------------------
+          # Read number of parent issues
+          # --------------------------------------------------
 
-          for i in $(seq 0 $(( ISSUE_COUNT - 1 ))); do
-            ISSUE_TITLE=$(yq ".issues[$i].title" "$FILE")
-            ISSUE_DESC=$(yq ".issues[$i].description // \"\"" "$FILE")
-            LABEL_COUNT=$(yq ".issues[$i].labels | length // 0" "$FILE")
-            CHILD_COUNT=$(yq ".issues[$i].children | length // 0" "$FILE")
+          ISSUE_COUNT=$(yq -r '.issues | length' "$FILE")
 
-            # Build label args
-            LABEL_ARGS=""
-            if [ "$LABEL_COUNT" != "null" ] && [ "$LABEL_COUNT" -gt 0 ] 2>/dev/null; then
-              for j in $(seq 0 $(( LABEL_COUNT - 1 ))); do
-                LABEL=$(yq ".issues[$i].labels[$j]" "$FILE")
-                LABEL_ARGS="$LABEL_ARGS --label $LABEL"
+          if [ "$ISSUE_COUNT" -eq 0 ]; then
+            echo "No issues found in YAML file."
+            exit 0
+          fi
+
+          echo "Found $ISSUE_COUNT parent issues."
+          echo ""
+
+          # --------------------------------------------------
+          # Create parent issues
+          # --------------------------------------------------
+
+          for i in $(seq 0 $((ISSUE_COUNT - 1))); do
+
+            ISSUE_TITLE=$(yq -r ".issues[$i].title" "$FILE")
+            ISSUE_DESC=$(yq -r ".issues[$i].description // \"\"" "$FILE")
+
+            echo "-----------------------------------------"
+            echo "Parent issue: $ISSUE_TITLE"
+            echo "-----------------------------------------"
+
+            # ----------------------------------------------
+            # Build label arguments
+            # ----------------------------------------------
+
+            LABEL_COUNT=$(yq -r ".issues[$i].labels // [] | length" "$FILE")
+
+            LABEL_ARGS=()
+
+            if [ "$LABEL_COUNT" -gt 0 ]; then
+              for j in $(seq 0 $((LABEL_COUNT - 1))); do
+                LABEL=$(yq -r ".issues[$i].labels[$j]" "$FILE")
+
+                if [ -n "$LABEL" ] && [ "$LABEL" != "null" ]; then
+                  LABEL_ARGS+=(--label "$LABEL")
+                fi
               done
             fi
 
-            # Create child issues first
-            CHILD_REFS=""
-            if [ "$CHILD_COUNT" != "null" ] && [ "$CHILD_COUNT" -gt 0 ] 2>/dev/null; then
-              for j in $(seq 0 $(( CHILD_COUNT - 1 ))); do
-                CHILD_TITLE=$(yq ".issues[$i].children[$j].title" "$FILE")
-                CHILD_DESC=$(yq ".issues[$i].children[$j].description // \"\"" "$FILE")
-
-                echo "  Creating child: $CHILD_TITLE"
-                CHILD_NUMBER=$(gh issue create \
-                  --title "$CHILD_TITLE" \
-                  --body "$CHILD_DESC" \
-                  --milestone "$MILESTONE" \
-                  $LABEL_ARGS)
-                LINE=$(printf '\n- [ ] #%s' "$CHILD_NUMBER")
-                CHILD_REFS="${CHILD_REFS}${LINE}"
-                echo "    -> #$CHILD_NUMBER"
-              done
-            fi
-
-            # Build parent body: description + task list
-            PARENT_BODY="$ISSUE_DESC"
-            if [ -n "$CHILD_REFS" ]; then
-              PARENT_BODY=$(printf '%s\n\n### Sub-tasks%s' "$PARENT_BODY" "$CHILD_REFS")
-            fi
-
+            # ----------------------------------------------
             # Create parent issue
-            echo "Creating parent: $ISSUE_TITLE"
-            PARENT_NUMBER=$(gh issue create \
+            # ----------------------------------------------
+
+            PARENT_URL=$(gh issue create \
               --title "$ISSUE_TITLE" \
-              --body "$PARENT_BODY" \
-              --milestone "$MILESTONE" \
-              $LABEL_ARGS)
-            echo "  -> #$PARENT_NUMBER"
+              --body "$ISSUE_DESC" \
+              --milestone "$TITLE" \
+              "${LABEL_ARGS[@]}")
+
+            PARENT_NUMBER="${PARENT_URL##*/}"
+
+            echo "Created parent issue #$PARENT_NUMBER"
+            echo ""
+
+            # ----------------------------------------------
+            # Read child issues
+            # ----------------------------------------------
+
+            CHILD_COUNT=$(yq -r ".issues[$i].children // [] | length" "$FILE")
+
+            if [ "$CHILD_COUNT" -eq 0 ]; then
+              echo "No child issues."
+              echo ""
+              continue
+            fi
+
+            echo "Creating $CHILD_COUNT sub-issues..."
+
+            # ----------------------------------------------
+            # Create child issues
+            # ----------------------------------------------
+
+            for j in $(seq 0 $((CHILD_COUNT - 1))); do
+
+              CHILD_TITLE=$(yq -r \
+                ".issues[$i].children[$j].title" \
+                "$FILE")
+
+              CHILD_DESC=$(yq -r \
+                ".issues[$i].children[$j].description // \"\"" \
+                "$FILE")
+
+              echo "  Creating sub-issue: $CHILD_TITLE"
+
+              CHILD_URL=$(gh issue create \
+                --title "$CHILD_TITLE" \
+                --body "$CHILD_DESC" \
+                --milestone "$TITLE" \
+                --parent "$PARENT_NUMBER")
+
+              CHILD_NUMBER="${CHILD_URL##*/}"
+
+              echo "    -> #$CHILD_NUMBER"
+            done
+
+            echo ""
           done
 
+          # --------------------------------------------------
+          # Summary
+          # --------------------------------------------------
+
           echo ""
           echo "========================================="
-          echo "Done! Milestone: #$MILESTONE"
+          echo "Milestone creation complete!"
           echo "========================================="
           echo ""
-          gh issue list --milestone "$MILESTONE" --json number,title
+          echo "Milestone: $TITLE"
+          echo "Milestone number: #$MILESTONE_NUMBER"
+          echo ""
+
+          echo "Issues created:"
+          gh issue list \
+            --milestone "$TITLE" \
+            --state all \
+            --limit 100 \
+            --json number,title,state \
+            --template '{{range .}}#{{.number}} - {{.title}} ({{.state}}){{"\n"}}{{end}}'
