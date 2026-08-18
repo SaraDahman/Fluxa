@@ -6,7 +6,7 @@ import { userRepository } from "./user.repository";
 
 import type { UpdateProfileBody } from "./dto/update-profile.schema";
 
-type PublicUser = Omit<UserModel, "password">;
+import type { PublicUser } from "./types";
 
 function toPublicUser(user: UserModel): PublicUser {
   const { password: _password, ...publicUser } = user;
@@ -30,20 +30,8 @@ export const userService = {
       }
     }
 
-    const updateData: { username: string; title?: string | null; avatar?: string | null } = {
-      username: data.username,
-    };
-
-    if (data.title !== undefined) {
-      updateData.title = data.title;
-    }
-
-    if (data.avatar !== undefined) {
-      updateData.avatar = data.avatar;
-    }
-
     const updated = await userRepository.updateProfile(userId, {
-      ...updateData,
+      ...data,
       profileComplete: true,
     });
 

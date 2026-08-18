@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 import { FullPageLoader } from "@/shared/components/common/FullPageLoader";
 
@@ -7,7 +7,6 @@ import { useMe } from "@/features/auth/api/auth";
 import ProtectedRoute from "./protected-route";
 
 export default function PublicRoute() {
-  const location = useLocation();
   const { data, isLoading } = useMe();
 
   if (isLoading) {

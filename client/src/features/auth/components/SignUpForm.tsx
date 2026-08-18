@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Check, Loader2, Lock, Mail } from "lucide-react";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { apiClient, getApiErrorMessage } from "@/lib/api-client";
@@ -58,18 +58,19 @@ const requirements = [
 ];
 
 export default function SignUpForm() {
+  const [formError, setFormError] = useState<string | undefined>(undefined);
+  const [invitationEmail, setInvitationEmail] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const invitationToken = searchParams.get("token");
 
-  const [formError, setFormError] = useState<string | undefined>(undefined);
-
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -82,8 +83,6 @@ export default function SignUpForm() {
 
     mode: "onSubmit",
   });
-
-  const [invitationEmail, setInvitationEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!invitationToken) return;
@@ -107,9 +106,8 @@ export default function SignUpForm() {
     };
   }, [invitationToken, setValue]);
 
-  const password = watch("password");
-
-  const strength = useMemo(() => scorePassword(password), [password]);
+  const password = useWatch({ control, name: "password" });
+  const strength = scorePassword(password || "");
 
   async function onSubmit(data: SignUpFormValues) {
     setFormError(undefined);

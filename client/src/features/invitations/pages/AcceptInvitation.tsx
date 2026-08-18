@@ -48,8 +48,10 @@ export default function AcceptInvitationPage() {
   const token = searchParams.get("token");
 
   const [invitation, setInvitation] = useState<InvitationPreview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [pageError, setPageError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(
+    !token ? "This invitation link is invalid. Please check the link and try again." : null
+  );
+  const [loading, setLoading] = useState(!token);
 
   const [authStatus, setAuthStatus] = useState<AuthStatus>("unauthenticated");
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -59,8 +61,6 @@ export default function AcceptInvitationPage() {
 
   useEffect(() => {
     if (!token) {
-      setPageError("This invitation link is invalid. Please check the link and try again.");
-      setLoading(false);
       return;
     }
 

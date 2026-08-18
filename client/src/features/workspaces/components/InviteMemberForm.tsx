@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Loader2, Mail } from "lucide-react";
 
 import { inviteMemberSchema, type InviteMemberFormValues } from "../schemas/invite-member.schema";
+import { useInviteMember } from "../api/workspaces";
+import { getApiErrorMessage } from "@/lib/api-client";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -16,39 +18,55 @@ import {
 } from "@/components/ui/select";
 
 const roles = [
-  { value: "member", label: "Member — can view and edit issues" },
-  { value: "admin", label: "Admin — can manage members and settings" },
-  { value: "owner", label: "Owner — can manage members and settings" },
-] as const;
+  { value: "MEMBER" as const, label: "Member — can view and edit issues" },
+  { value: "ADMIN" as const, label: "Admin — can manage members and settings" },
+];
 
 interface InviteMemberFormProps {
+  workspaceId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function InviteMemberForm({ onSuccess, onCancel }: InviteMemberFormProps) {
+export default function InviteMemberForm({
+  workspaceId,
+  onSuccess,
+  onCancel,
+}: InviteMemberFormProps) {
+  const inviteMember = useInviteMember(workspaceId);
+
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    setError,
+    formState: { errors },
   } = useForm<InviteMemberFormValues>({
     resolver: zodResolver(inviteMemberSchema),
 
     defaultValues: {
       email: "",
-      role: "member",
+      role: "MEMBER",
     },
 
     mode: "onSubmit",
   });
 
-  async function onSubmit(_data: InviteMemberFormValues) {
-    onSuccess?.();
+  async function onSubmit(data: InviteMemberFormValues) {
+    inviteMember.mutate(data, {
+      onSuccess: () => {
+        onSuccess?.();
+      },
+      onError: (error) => {
+        setError("root", { message: getApiErrorMessage(error) });
+      },
+    });
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="invite-email">Email address</FieldLabel>
@@ -61,6 +79,7 @@ export default function InviteMemberForm({ onSuccess, onCancel }: InviteMemberFo
               autoComplete="email"
               placeholder="teammate@company.com"
               className="pl-9"
+              disabled={inviteMember.isPending}
               {...register("email")}
             />
           </div>
@@ -73,7 +92,11 @@ export default function InviteMemberForm({ onSuccess, onCancel }: InviteMemberFo
             name="role"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={inviteMember.isPending}
+              >
                 <SelectTrigger id="invite-role" className="w-full" aria-invalid={!!errors.role}>
                   <SelectValue />
                 </SelectTrigger>
@@ -94,11 +117,16 @@ export default function InviteMemberForm({ onSuccess, onCancel }: InviteMemberFo
       </FieldGroup>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={inviteMember.isPending}
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
+        <Button type="submit" disabled={inviteMember.isPending}>
+          {inviteMember.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <ArrowRight className="h-4 w-4" />

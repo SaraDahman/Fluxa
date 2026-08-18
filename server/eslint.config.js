@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import unusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
 import globals from "globals";
 
@@ -14,6 +15,10 @@ export default tseslint.config(
   {
     files: ["src/**/*.ts"],
 
+    plugins: {
+      "unused-imports": unusedImports,
+    },
+
     languageOptions: {
       globals: globals.node,
       parserOptions: {
@@ -23,6 +28,7 @@ export default tseslint.config(
 
     rules: {
       "no-console": "off",
+      "unused-imports/no-unused-imports": "warn",
       "@typescript-eslint/consistent-type-imports": [
         "warn",
         {
