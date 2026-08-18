@@ -1,0 +1,184 @@
+title: "Milestone 3: Teams"
+description: "Team management, members, and roles"
+
+issues:
+  - title: "Team management"
+    description: |
+      Implement full CRUD for teams within a workspace. Teams group members and own projects.
+    labels:
+      - enhancement
+    children:
+      - title: "Create team"
+        description: |
+          Allow workspace owners/admins to create a new team.
+
+          **Endpoints:**
+          - `POST /workspaces/:workspaceId/teams`
+
+          **Body:** `{ name: string, description?: string }`
+
+          **Steps:**
+          - Create `server/src/modules/teams/` (controller, service, repository, DTOs, routes)
+          - Add Zod validation schema for create team
+          - Auto-add creator as team member with LEAD role
+          - Return created team with membership
+
+      - title: "View teams"
+        description: |
+          List all teams in the current workspace.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams`
+
+          **Steps:**
+          - Return teams with member count
+          - Support pagination (offset/limit)
+
+      - title: "View team details"
+        description: |
+          Get a single team with its members and projects.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams/:teamId`
+
+          **Steps:**
+          - Return team info + members list + projects list
+
+      - title: "Update team"
+        description: |
+          Allow team leads and workspace admins to update team info.
+
+          **Endpoints:**
+          - `PATCH /workspaces/:workspaceId/teams/:teamId`
+
+          **Body:** `{ name?: string, description?: string }`
+
+          **Steps:**
+          - Validate permissions (LEAD or workspace ADMIN/OWNER)
+          - Update team fields
+
+      - title: "Delete team"
+        description: |
+          Allow workspace owners to delete a team. Projects are unlinked, not deleted.
+
+          **Endpoints:**
+          - `DELETE /workspaces/:workspaceId/teams/:teamId`
+
+          **Steps:**
+          - Validate permissions (workspace OWNER only)
+          - Delete team and all TeamMember records (cascade)
+          - Set `teamId = null` on linked projects
+
+  - title: "Team members"
+    description: |
+      Manage membership within a team. Members must already belong to the workspace.
+    labels:
+      - enhancement
+    children:
+      - title: "Add member to team"
+        description: |
+          Add an existing workspace member to a team.
+
+          **Endpoints:**
+          - `POST /workspaces/:workspaceId/teams/:teamId/members`
+
+          **Body:** `{ userId: string, role?: "LEAD" | "MEMBER" }`
+
+          **Steps:**
+          - Verify target user is a workspace member
+          - Verify caller has permission (LEAD or workspace ADMIN)
+          - Create TeamMember record
+          - Default role: MEMBER
+
+      - title: "Remove member from team"
+        description: |
+          Remove a member from a team.
+
+          **Endpoints:**
+          - `DELETE /workspaces/:workspaceId/teams/:teamId/members/:userId`
+
+          **Steps:**
+          - Verify caller has permission (LEAD or workspace ADMIN)
+          - Prevent removing the last LEAD
+          - Delete TeamMember record
+
+      - title: "Prevent duplicate team membership"
+        description: |
+          Enforce unique constraint on (teamId, userId).
+
+          **Steps:**
+          - Return 409 if user is already a team member
+          - Handled by Prisma `@@unique([teamId, userId])`
+
+      - title: "List team members"
+        description: |
+          List all members of a team with their roles.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams/:teamId/members`
+
+          **Steps:**
+          - Return members with user info (name, email, avatar) and role
+          - Sort by role (LEAD first), then by join date
+
+  - title: "Team roles & permissions"
+    description: |
+      Define and enforce roles within teams. Requires a schema migration.
+    labels:
+      - enhancement
+    children:
+      - title: "Add role column to TeamMember"
+        description: |
+          **Migration:** Add `role` field to `team_members` table.
+
+          **Steps:**
+          - Add `role TeamRole @default(MEMBER)` to TeamMember model
+          - Add `TeamRole` enum: `LEAD`, `MEMBER`
+          - Run `prisma migrate dev`
+          - Existing members get MEMBER role by default
+
+      - title: "Define team roles"
+        description: |
+          Define the TeamRole enum and its permissions matrix.
+
+          **Permissions:**
+          | Action                  | LEAD | MEMBER |
+          |-------------------------|------|--------|
+          | View team               | ✅   | ✅     |
+          | Create project          | ✅   | ❌     |
+          | Manage members          | ✅   | ❌     |
+          | Update member roles     | ✅   | ❌     |
+          | Update team settings    | ✅   | ❌     |
+          | Delete team             | ❌   | ❌ (OWNER only) |
+
+      - title: "Assign role when adding member"
+        description: |
+          Allow specifying a role when adding a member to a team.
+
+          **Steps:**
+          - Accept `role` in POST /members body
+          - Validate role is a valid TeamRole
+          - Default to MEMBER if not provided
+
+      - title: "Update member role"
+        description: |
+          Allow team leads to change a member's role.
+
+          **Endpoints:**
+          - `PATCH /workspaces/:workspaceId/teams/:teamId/members/:userId`
+
+          **Body:** `{ role: "LEAD" | "MEMBER" }`
+
+          **Steps:**
+          - Verify caller is LEAD or workspace ADMIN
+          - Prevent demoting the last LEAD
+          - Update role field
+
+      - title: "Enforce permissions"
+        description: |
+          Create middleware to enforce team-level permissions.
+
+          **Steps:**
+          - Create `requireTeamRole` middleware (similar to `requireWorkspaceRole`)
+          - Apply to team management routes
+          - Return 403 if user lacks required role

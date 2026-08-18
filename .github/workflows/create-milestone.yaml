@@ -1,0 +1,114 @@
+name: Create Milestone from YAML
+
+on:
+  workflow_dispatch:
+    inputs:
+      milestone_file:
+        description: "Path to milestone YAML file"
+        required: true
+        default: ".github/milestones/milestone-3.yaml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && sudo chmod +x /usr/local/bin/yq
+
+      - name: Create milestone
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FILE="${{ inputs.milestone_file }}"
+
+          if [ ! -f "$FILE" ]; then
+            echo "::error::File not found: $FILE"
+            exit 1
+          fi
+
+          TITLE=$(yq '.title' "$FILE")
+          DESC=$(yq '.description // ""' "$FILE")
+
+          echo "Creating milestone: $TITLE"
+          MILESTONE_NUMBER=$(gh api repos/{owner}/{repo}/milestones \
+            -f title="$TITLE" \
+            -f description="$DESC" \
+            -f state="open" \
+            --jq '.number')
+
+          echo "MILESTONE_NUMBER=$MILESTONE_NUMBER" >> "$GITHUB_ENV"
+          echo "Created milestone #$MILESTONE_NUMBER"
+
+      - name: Create issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE: ${{ env.MILESTONE_NUMBER }}
+        run: |
+          FILE="${{ inputs.milestone_file }}"
+          ISSUE_COUNT=$(yq '.issues | length' "$FILE")
+
+          for i in $(seq 0 $(( ISSUE_COUNT - 1 ))); do
+            ISSUE_TITLE=$(yq ".issues[$i].title" "$FILE")
+            ISSUE_DESC=$(yq ".issues[$i].description // "" | sub("\n$"; "")" "$FILE")
+            LABEL_COUNT=$(yq ".issues[$i].labels | length // 0" "$FILE")
+            CHILD_COUNT=$(yq ".issues[$i].children | length // 0" "$FILE")
+
+            # Build label args
+            LABEL_ARGS=""
+            if [ "$LABEL_COUNT" != "null" ] && [ "$LABEL_COUNT" -gt 0 ]; then
+              for j in $(seq 0 $(( LABEL_COUNT - 1 ))); do
+                LABEL=$(yq ".issues[$i].labels[$j]" "$FILE")
+                LABEL_ARGS="$LABEL_ARGS --label $LABEL"
+              done
+            fi
+
+            # Create child issues first
+            CHILD_REFS=""
+            if [ "$CHILD_COUNT" != "null" ] && [ "$CHILD_COUNT" -gt 0 ]; then
+              for j in $(seq 0 $(( CHILD_COUNT - 1 ))); do
+                CHILD_TITLE=$(yq ".issues[$i].children[$j].title" "$FILE")
+                CHILD_DESC=$(yq ".issues[$i].children[$j].description // "" | sub("\n$"; "")" "$FILE")
+
+                echo "  Creating child: $CHILD_TITLE"
+                CHILD_NUMBER=$(gh issue create \
+                  --title "$CHILD_TITLE" \
+                  --body "$CHILD_DESC" \
+                  --milestone "$MILESTONE" \
+                  $LABEL_ARGS)
+                CHILD_REFS="$CHILD_REFS
+- [ ] #$CHILD_NUMBER"
+                echo "    -> #$CHILD_NUMBER"
+              done
+            fi
+
+            # Build parent body: description + task list
+            PARENT_BODY="$ISSUE_DESC"
+            if [ -n "$CHILD_REFS" ]; then
+              PARENT_BODY="$PARENT_BODY
+
+### Sub-tasks$CHILD_REFS"
+            fi
+
+            # Create parent issue
+            echo "Creating parent: $ISSUE_TITLE"
+            PARENT_NUMBER=$(gh issue create \
+              --title "$ISSUE_TITLE" \
+              --body "$PARENT_BODY" \
+              --milestone "$MILESTONE" \
+              $LABEL_ARGS)
+            echo "  -> #$PARENT_NUMBER"
+          done
+
+          echo ""
+          echo "========================================="
+          echo "Done! Milestone: #$MILESTONE_NUMBER"
+          echo "========================================="
+          echo ""
+          gh issue list --milestone "$MILESTONE" --json number,title
