@@ -1,5 +1,3 @@
-import type { WorkspaceInvitationModel } from "../../../generated/prisma/models/WorkspaceInvitation";
-
 export type InvitationRole = "ADMIN" | "MEMBER";
 
 export type CreateInvitationData = {
@@ -17,6 +15,10 @@ export type UpdateInvitationData = {
   expiresAt: Date;
 };
 
-export type InvitationWithWorkspace = WorkspaceInvitationModel & {
+export type InvitationPreviewDto = {
   workspace: { id: string; name: string };
+  role: InvitationRole;
+  email: string;
+  status: string;
+  expiresAt: Date | null;
 };
