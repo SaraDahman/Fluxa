@@ -86,8 +86,8 @@ jobs:
                   --body "$CHILD_DESC" \
                   --milestone "$MILESTONE" \
                   $LABEL_ARGS)
-                CHILD_REFS="${CHILD_REFS}
-- [ ] #${CHILD_NUMBER}"
+                LINE=$(printf '\n- [ ] #%s' "$CHILD_NUMBER")
+                CHILD_REFS="${CHILD_REFS}${LINE}"
                 echo "    -> #$CHILD_NUMBER"
               done
             fi
@@ -95,9 +95,7 @@ jobs:
             # Build parent body: description + task list
             PARENT_BODY="$ISSUE_DESC"
             if [ -n "$CHILD_REFS" ]; then
-              PARENT_BODY="${PARENT_BODY}
-
-### Sub-tasks${CHILD_REFS}"
+              PARENT_BODY=$(printf '%s\n\n### Sub-tasks%s' "$PARENT_BODY" "$CHILD_REFS")
             fi
 
             # Create parent issue
