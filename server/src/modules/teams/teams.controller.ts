@@ -37,9 +37,9 @@ export const teamController = {
   },
 
   async getTeam(req: WorkspaceRequest, res: Response) {
-    const { teamId } = req.params as TeamParams;
+    const { workspaceId, teamId } = req.params as TeamParams;
 
-    const team = await teamService.getTeam(teamId);
+    const team = await teamService.getTeam(teamId, workspaceId);
 
     res.json({
       success: true,
