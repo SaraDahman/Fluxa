@@ -37,8 +37,8 @@ export const teamService = {
     return teamRepository.listByWorkspaceForUser(workspaceId, actor.userId);
   },
 
-  async getTeam(teamId: string): Promise<TeamWithMembers> {
-    const team = await teamRepository.findWithMembers(teamId);
+  async getTeam(teamId: string, workspaceId: string): Promise<TeamWithMembers> {
+    const team = await teamRepository.findWithMembers(teamId, workspaceId);
 
     if (!team) {
       throw new ApiError(404, "Team not found");

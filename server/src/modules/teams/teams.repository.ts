@@ -73,9 +73,9 @@ export const teamRepository = {
     });
   },
 
-  findWithMembers(teamId: string) {
-    return prisma.team.findUnique({
-      where: { id: teamId },
+  findWithMembers(teamId: string, workspaceId: string) {
+    return prisma.team.findFirst({
+      where: { id: teamId, workspaceId },
       include: {
         members: {
           include: { user: { select: userSelect } },
