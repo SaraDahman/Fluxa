@@ -26,6 +26,11 @@ enum SprintStatus {
   COMPLETED
 }
 
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
 model Team {
   id          String   @id @default(uuid())
   name        String
@@ -46,6 +51,7 @@ model TeamMember {
   id        String   @id @default(uuid())
   teamId    String
   userId    String
+  role      TeamRole @default(MEMBER)
   createdAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
