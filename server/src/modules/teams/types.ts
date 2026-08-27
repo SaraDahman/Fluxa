@@ -2,11 +2,6 @@ import type { MemberRole } from "../../../generated/prisma/enums";
 import type { TeamRole } from "../../../generated/prisma/enums";
 import type { TeamModel } from "../../../generated/prisma/models/Team";
 
-export type CreateTeamBody = {
-  name: string;
-  description?: string;
-};
-
 export type TeamActor = {
   userId: string;
   role: MemberRole;
