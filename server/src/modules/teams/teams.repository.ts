@@ -50,17 +50,23 @@ export const teamRepository = {
     });
   },
 
-  listByWorkspace(workspaceId: string) {
+  listByWorkspace(workspaceId: string, skip: number, take: number) {
     return prisma.team.findMany({
       where: { workspaceId },
       include: {
         _count: { select: { members: true } },
       },
       orderBy: { createdAt: "asc" },
+      skip,
+      take,
     });
   },
 
-  listByWorkspaceForUser(workspaceId: string, userId: string) {
+  countByWorkspace(workspaceId: string) {
+    return prisma.team.count({ where: { workspaceId } });
+  },
+
+  listByWorkspaceForUser(workspaceId: string, userId: string, skip: number, take: number) {
     return prisma.team.findMany({
       where: {
         workspaceId,
@@ -70,6 +76,17 @@ export const teamRepository = {
         _count: { select: { members: true } },
       },
       orderBy: { createdAt: "asc" },
+      skip,
+      take,
+    });
+  },
+
+  countByWorkspaceForUser(workspaceId: string, userId: string) {
+    return prisma.team.count({
+      where: {
+        workspaceId,
+        members: { some: { userId } },
+      },
     });
   },
 
