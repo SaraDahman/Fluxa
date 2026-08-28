@@ -6,6 +6,7 @@ import { requireWorkspaceRole } from "../workspaces/middleware/require-workspace
 
 import { teamController } from "./teams.controller";
 import { createTeamSchema } from "./dto/create-team.schema";
+import { paginationSchema } from "./dto/pagination.schema";
 import { teamParamsSchema } from "./dto/team-params.schema";
 import { workspaceParamsSchema } from "./dto/workspace-params.schema";
 
@@ -22,7 +23,7 @@ router.post(
 router.get(
   "/:workspaceId/teams",
   authenticate,
-  validate({ params: workspaceParamsSchema }),
+  validate({ params: workspaceParamsSchema, query: paginationSchema }),
   requireWorkspaceRole("MEMBER"),
   teamController.listTeams
 );
