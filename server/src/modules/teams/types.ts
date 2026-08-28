@@ -11,6 +11,10 @@ export type TeamWithMembers = TeamModel & {
   members: TeamMemberWithUser[];
 };
 
+export type TeamSummary = TeamModel & {
+  _count: { members: number };
+};
+
 export type TeamMemberWithUser = {
   id: string;
   teamId: string;
