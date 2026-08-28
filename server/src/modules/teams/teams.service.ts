@@ -3,7 +3,8 @@ import { ApiError } from "../../utils/api-error";
 import { teamRepository } from "./teams.repository";
 
 import type { CreateTeamBody } from "./dto/create-team.schema";
-import type { TeamActor, TeamWithMembers } from "./types";
+import type { PaginatedResponse, PaginationQuery } from "./dto/pagination.schema";
+import type { TeamActor, TeamWithMembers, TeamSummary } from "./types";
 
 export const teamService = {
   async createTeam(
@@ -29,12 +30,24 @@ export const teamService = {
     };
   },
 
-  async listTeams(workspaceId: string, actor: TeamActor) {
-    if (actor.role === "OWNER") {
-      return teamRepository.listByWorkspace(workspaceId);
-    }
+  async listTeams(
+    workspaceId: string,
+    actor: TeamActor,
+    pagination: PaginationQuery
+  ): Promise<PaginatedResponse<TeamSummary>> {
+    const { offset, limit } = pagination;
+    const isOwner = actor.role === "OWNER";
 
-    return teamRepository.listByWorkspaceForUser(workspaceId, actor.userId);
+    const [items, total] = await Promise.all([
+      isOwner
+        ? teamRepository.listByWorkspace(workspaceId, offset, limit)
+        : teamRepository.listByWorkspaceForUser(workspaceId, actor.userId, offset, limit),
+      isOwner
+        ? teamRepository.countByWorkspace(workspaceId)
+        : teamRepository.countByWorkspaceForUser(workspaceId, actor.userId),
+    ]);
+
+    return { items, total, offset, limit };
   },
 
   async getTeam(teamId: string, workspaceId: string): Promise<TeamWithMembers> {

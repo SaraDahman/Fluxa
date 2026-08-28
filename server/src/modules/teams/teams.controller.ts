@@ -5,6 +5,7 @@ import type { WorkspaceRequest } from "../workspaces/types";
 import { teamService } from "./teams.service";
 
 import type { CreateTeamBody } from "./dto/create-team.schema";
+import type { PaginationQuery } from "./dto/pagination.schema";
 import type { TeamParams } from "./dto/team-params.schema";
 import type { WorkspaceParams } from "./dto/workspace-params.schema";
 
@@ -24,15 +25,20 @@ export const teamController = {
 
   async listTeams(req: WorkspaceRequest, res: Response) {
     const { workspaceId } = req.params as WorkspaceParams;
+    const { offset, limit } = req.query as unknown as PaginationQuery;
 
-    const teams = await teamService.listTeams(workspaceId, {
-      userId: req.user!.userId,
-      role: req.membership!.role,
-    });
+    const result = await teamService.listTeams(
+      workspaceId,
+      {
+        userId: req.user!.userId,
+        role: req.membership!.role,
+      },
+      { offset, limit }
+    );
 
     res.json({
       success: true,
-      data: teams,
+      data: result,
     });
   },
 
