@@ -56,7 +56,7 @@ export const teamRepository = {
       include: {
         _count: { select: { members: true } },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       skip,
       take,
     });
@@ -75,7 +75,7 @@ export const teamRepository = {
       include: {
         _count: { select: { members: true } },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       skip,
       take,
     });
