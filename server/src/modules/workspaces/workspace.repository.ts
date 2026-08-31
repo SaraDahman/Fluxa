@@ -17,16 +17,13 @@ export const workspaceRepository = {
     return prisma.workspace.findUnique({ where: { slug } });
   },
 
+  findById(workspaceId: string) {
+    return prisma.workspace.findUnique({ where: { id: workspaceId } });
+  },
+
   findByOwnerAndName(createdBy: string, name: string) {
     return prisma.workspace.findUnique({
       where: { createdBy_name: { createdBy, name } },
-    });
-  },
-
-  findMembership(workspaceId: string, userId: string) {
-    return prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId } },
-      include: { workspace: true },
     });
   },
 

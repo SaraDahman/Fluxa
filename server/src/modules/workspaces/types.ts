@@ -6,11 +6,6 @@ export type WorkspaceWithRole = {
   role: WorkspaceRole;
 };
 
-export type MemberActor = {
-  userId: string;
-  role: WorkspaceRole;
-};
-
 export type WorkspaceMemberWithUser = {
   id: string;
   workspaceId: string;
