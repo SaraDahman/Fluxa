@@ -1,12 +1,5 @@
 import type { WorkspaceRole } from "../../../generated/prisma/enums";
-import type { WorkspaceMemberModel } from "../../../generated/prisma/models/WorkspaceMember";
 import type { WorkspaceModel } from "../../../generated/prisma/models/Workspace";
-
-import type { AuthenticatedRequest } from "../auth/types";
-
-export interface WorkspaceRequest extends AuthenticatedRequest {
-  membership?: WorkspaceMemberModel;
-}
 
 export type WorkspaceWithRole = {
   workspace: WorkspaceModel;

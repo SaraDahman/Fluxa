@@ -1,7 +1,7 @@
 import type { Response } from "express";
 
 import type { AuthenticatedRequest } from "../auth/types";
-import type { WorkspaceRequest } from "./types";
+import type { PermissionRequest } from "../../permissions/types";
 
 import { workspaceService } from "./workspace.service";
 
@@ -43,7 +43,7 @@ export const workspaceController = {
     });
   },
 
-  async listMembers(req: WorkspaceRequest, res: Response) {
+  async listMembers(req: AuthenticatedRequest, res: Response) {
     const { workspaceId } = req.params as unknown as WorkspaceParams;
 
     const members = await workspaceService.listMembers(workspaceId);
@@ -54,12 +54,12 @@ export const workspaceController = {
     });
   },
 
-  async updateMemberRole(req: WorkspaceRequest, res: Response) {
+  async updateMemberRole(req: PermissionRequest, res: Response) {
     const { workspaceId, userId } = req.params as unknown as MemberParams;
     const { role } = req.body as UpdateMemberRoleBody;
 
     const member = await workspaceService.updateMemberRole(
-      { userId: req.user!.userId, role: req.membership!.role },
+      { userId: req.user!.userId, role: req.access!.workspaceRole! },
       workspaceId,
       userId,
       role
@@ -72,11 +72,11 @@ export const workspaceController = {
     });
   },
 
-  async removeMember(req: WorkspaceRequest, res: Response) {
+  async removeMember(req: PermissionRequest, res: Response) {
     const { workspaceId, userId } = req.params as unknown as MemberParams;
 
     await workspaceService.removeMember(
-      { userId: req.user!.userId, role: req.membership!.role },
+      { userId: req.user!.userId, role: req.access!.workspaceRole! },
       workspaceId,
       userId
     );

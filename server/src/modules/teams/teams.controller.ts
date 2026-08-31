@@ -1,6 +1,7 @@
 import type { Response } from "express";
 
-import type { WorkspaceRequest } from "../workspaces/types";
+import type { AuthenticatedRequest } from "../auth/types";
+import type { PermissionRequest } from "../../permissions/types";
 
 import { teamService } from "./teams.service";
 
@@ -10,7 +11,7 @@ import type { TeamParams } from "./dto/team-params.schema";
 import type { WorkspaceParams } from "./dto/workspace-params.schema";
 
 export const teamController = {
-  async createTeam(req: WorkspaceRequest, res: Response) {
+  async createTeam(req: AuthenticatedRequest, res: Response) {
     const { workspaceId } = req.params as WorkspaceParams;
     const body = req.body as CreateTeamBody;
 
@@ -23,7 +24,7 @@ export const teamController = {
     });
   },
 
-  async listTeams(req: WorkspaceRequest, res: Response) {
+  async listTeams(req: PermissionRequest, res: Response) {
     const { workspaceId } = req.params as WorkspaceParams;
     const { offset, limit } = req.query as unknown as PaginationQuery;
 
@@ -31,7 +32,7 @@ export const teamController = {
       workspaceId,
       {
         userId: req.user!.userId,
-        role: req.membership!.role,
+        role: req.access!.workspaceRole!,
       },
       { offset, limit }
     );
@@ -42,7 +43,7 @@ export const teamController = {
     });
   },
 
-  async getTeam(req: WorkspaceRequest, res: Response) {
+  async getTeam(req: AuthenticatedRequest, res: Response) {
     const { workspaceId, teamId } = req.params as TeamParams;
 
     const team = await teamService.getTeam(teamId, workspaceId);
