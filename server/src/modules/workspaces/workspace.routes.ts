@@ -47,6 +47,14 @@ router.patch(
 );
 
 router.delete(
+  "/:workspaceId/members/me",
+  authenticate,
+  validate({ params: workspaceParamsSchema }),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_VIEW),
+  workspaceController.leaveWorkspace
+);
+
+router.delete(
   "/:workspaceId/members/:userId",
   authenticate,
   validate({ params: memberParamsSchema }),

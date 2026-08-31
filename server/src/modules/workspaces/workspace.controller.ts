@@ -32,14 +32,17 @@ export const workspaceController = {
     });
   },
 
-  async getWorkspace(req: AuthenticatedRequest, res: Response) {
+  async getWorkspace(req: PermissionRequest, res: Response) {
     const { workspaceId } = req.params as unknown as WorkspaceParams;
 
-    const workspace = await workspaceService.getWorkspace(req.user!.userId, workspaceId);
+    const workspace = await workspaceService.getWorkspace(workspaceId);
 
     res.json({
       success: true,
-      data: workspace,
+      data: {
+        workspace,
+        role: req.access!.workspaceRole!,
+      },
     });
   },
 
@@ -59,7 +62,7 @@ export const workspaceController = {
     const { role } = req.body as UpdateMemberRoleBody;
 
     const member = await workspaceService.updateMemberRole(
-      { userId: req.user!.userId, role: req.access!.workspaceRole! },
+      req.user!.userId,
       workspaceId,
       userId,
       role
@@ -75,15 +78,22 @@ export const workspaceController = {
   async removeMember(req: PermissionRequest, res: Response) {
     const { workspaceId, userId } = req.params as unknown as MemberParams;
 
-    await workspaceService.removeMember(
-      { userId: req.user!.userId, role: req.access!.workspaceRole! },
-      workspaceId,
-      userId
-    );
+    await workspaceService.removeMember(workspaceId, userId);
 
     res.json({
       success: true,
       message: "Member removed successfully",
+    });
+  },
+
+  async leaveWorkspace(req: PermissionRequest, res: Response) {
+    const { workspaceId } = req.params as unknown as WorkspaceParams;
+
+    await workspaceService.leaveWorkspace(req.user!.userId, workspaceId);
+
+    res.json({
+      success: true,
+      message: "You left the workspace",
     });
   },
 };
