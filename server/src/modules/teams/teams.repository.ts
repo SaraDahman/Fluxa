@@ -11,26 +11,13 @@ const userSelect = {
 } as const;
 
 export const teamRepository = {
-  createWithMember(data: CreateTeamBody & { workspaceId: string; userId: string }) {
-    return prisma.$transaction(async (tx) => {
-      const team = await tx.team.create({
-        data: {
-          name: data.name,
-          description: data.description,
-          workspaceId: data.workspaceId,
-        },
-      });
-
-      const member = await tx.teamMember.create({
-        data: {
-          teamId: team.id,
-          userId: data.userId,
-          role: "LEAD",
-        },
-        include: { user: { select: userSelect } },
-      });
-
-      return { team, member };
+  create(data: CreateTeamBody & { workspaceId: string }) {
+    return prisma.team.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        workspaceId: data.workspaceId,
+      },
     });
   },
 
@@ -96,7 +83,7 @@ export const teamRepository = {
       include: {
         members: {
           include: { user: { select: userSelect } },
-          orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+          orderBy: { createdAt: "asc" },
         },
       },
     });

@@ -26,8 +26,8 @@ enum SprintStatus {
   COMPLETED
 }
 
-enum TeamRole {
-  LEAD
+enum ProjectRole {
+  ADMIN
   MEMBER
 }
 
@@ -51,7 +51,6 @@ model TeamMember {
   id        String   @id @default(uuid())
   teamId    String
   userId    String
-  role      TeamRole @default(MEMBER)
   createdAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -76,6 +75,7 @@ model Project {
   workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   team         Team?     @relation(fields: [teamId], references: [id])
   createdByUser User     @relation(fields: [createdBy], references: [id])
+  members      ProjectMember[]
   boards       Board[]
   sprints      Sprint[]
   labels       Label[]
@@ -84,6 +84,22 @@ model Project {
   @@unique([workspaceId, key])
   @@index([workspaceId])
   @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  createdAt DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
 }
 
 model Board {

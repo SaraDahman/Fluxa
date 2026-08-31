@@ -1,4 +1,5 @@
-import { BookOpen, Bot, Settings2, SquareTerminal, ChevronRight, Users } from "lucide-react";
+import { BookOpen, Bot, Settings2, SquareTerminal, ChevronRight, Users, Lock } from "lucide-react";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
@@ -14,6 +15,7 @@ import {
 const items = [
   {
     title: "Playground",
+    isDisabled: false,
     url: "#",
     icon: SquareTerminal,
     isActive: true,
@@ -34,6 +36,7 @@ const items = [
   },
   {
     title: "Models",
+    isDisabled: false,
     url: "#",
     icon: Bot,
     items: [
@@ -53,6 +56,7 @@ const items = [
   },
   {
     title: "Documentation",
+    isDisabled: false,
     url: "#",
     icon: BookOpen,
     items: [
@@ -76,6 +80,7 @@ const items = [
   },
   {
     title: "Settings",
+    isDisabled: true,
     url: "#",
     icon: Settings2,
     items: [
@@ -111,10 +116,13 @@ export default function TeamsNav() {
             className="group/collapsible w-full"
           >
             <SidebarMenuItem>
-              <CollapsibleTrigger className="w-full">
+              <CollapsibleTrigger className="w-full" disabled={item.isDisabled}>
                 {" "}
-                <SidebarMenuButton className="flex items-center gap-2.5 rounded-md text-sm! transition-colors w-full h-full text-sidebar-muted! hover:bg-sidebar-hover! hover:text-sidebar-foreground">
-                  <Users size={16} />
+                <SidebarMenuButton
+                  className="flex items-center gap-2.5 rounded-md text-sm! transition-colors w-full h-full text-sidebar-muted! hover:bg-sidebar-hover! hover:text-sidebar-foreground"
+                  disabled={item.isDisabled}
+                >
+                  {item.isDisabled ? <Lock /> : <Users size={16} />}
                   <span>{item.title}</span>
                   <ChevronRight
                     className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
