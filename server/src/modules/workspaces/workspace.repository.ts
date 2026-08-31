@@ -1,4 +1,4 @@
-import type { MemberRole } from "../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../generated/prisma/enums";
 
 import { prisma } from "../../lib/prisma";
 
@@ -75,7 +75,7 @@ export const workspaceRepository = {
     return prisma.workspaceMember.count({ where: { workspaceId, role: "OWNER" } });
   },
 
-  updateMemberRole(workspaceId: string, userId: string, role: MemberRole) {
+  updateMemberRole(workspaceId: string, userId: string, role: WorkspaceRole) {
     return prisma.workspaceMember.update({
       where: { workspaceId_userId: { workspaceId, userId } },
       data: { role },

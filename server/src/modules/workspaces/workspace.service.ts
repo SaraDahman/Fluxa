@@ -1,4 +1,4 @@
-import type { MemberRole } from "../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../generated/prisma/enums";
 
 import { ApiError } from "../../utils/api-error";
 
@@ -83,7 +83,7 @@ export const workspaceService = {
     actor: MemberActor,
     workspaceId: string,
     targetUserId: string,
-    role: MemberRole
+    role: WorkspaceRole
   ): Promise<WorkspaceMemberWithUser> {
     const target = await workspaceRepository.findMember(workspaceId, targetUserId);
 

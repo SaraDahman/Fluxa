@@ -1,6 +1,6 @@
 import type { NextFunction, Response } from "express";
 
-import type { MemberRole } from "../../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../../generated/prisma/enums";
 
 import type { WorkspaceRequest } from "../types";
 
@@ -10,7 +10,7 @@ import { hasRole } from "../utils/member-role";
 
 import { workspaceRepository } from "../workspace.repository";
 
-export function requireWorkspaceRole(minimumRole: MemberRole) {
+export function requireWorkspaceRole(minimumRole: WorkspaceRole) {
   return async (req: WorkspaceRequest, _res: Response, next: NextFunction): Promise<void> => {
     try {
       const { workspaceId } = req.params as { workspaceId: string };
