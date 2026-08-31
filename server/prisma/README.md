@@ -30,7 +30,7 @@ User
 
 | Enum               | Values                                                | Used by                                  |
 | ------------------ | ----------------------------------------------------- | ---------------------------------------- |
-| `MemberRole`       | `OWNER`, `ADMIN`, `MEMBER`                            | `WorkspaceMember`, `WorkspaceInvitation` |
+| `WorkspaceRole`    | `OWNER`, `ADMIN`, `MEMBER`                            | `WorkspaceMember`, `WorkspaceInvitation` |
 | `TeamRole`         | `LEAD`, `MEMBER`                                      | `TeamMember`                             |
 | `InvitationStatus` | `PENDING`, `ACCEPTED`, `REVOKED`, `EXPIRED`           | `WorkspaceInvitation`                    |
 | `TaskStatus`       | `BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE` | `Task`, `Column`                         |
@@ -94,13 +94,13 @@ User
 
 `workspace.schema.prisma` — maps to `workspace_members`
 
-| Field         | Type         | Notes               |
-| ------------- | ------------ | ------------------- |
-| `id`          | `String`     | PK, UUID            |
-| `workspaceId` | `String`     | FK → `Workspace.id` |
-| `userId`      | `String`     | FK → `User.id`      |
-| `role`        | `MemberRole` | Default `MEMBER`    |
-| `createdAt`   | `DateTime`   |                     |
+| Field         | Type            | Notes               |
+| ------------- | --------------- | ------------------- |
+| `id`          | `String`        | PK, UUID            |
+| `workspaceId` | `String`        | FK → `Workspace.id` |
+| `userId`      | `String`        | FK → `User.id`      |
+| `role`        | `WorkspaceRole` | Default `MEMBER`    |
+| `createdAt`   | `DateTime`      |                     |
 
 **Constraints:** unique on `(workspaceId, userId)` — a user belongs to a workspace once.
 
@@ -114,7 +114,7 @@ User
 | `workspaceId` | `String`           | FK → `Workspace.id`              |
 | `email`       | `String`           |                                  |
 | `token`       | `String`           | Unique, used for the invite link |
-| `role`        | `MemberRole`       | Default `MEMBER`                 |
+| `role`        | `WorkspaceRole`    | Default `MEMBER`                 |
 | `status`      | `InvitationStatus` | Default `PENDING`                |
 | `expiresAt`   | `DateTime?`        |                                  |
 | `invitedById` | `String`           | FK → `User.id` (the inviter)     |

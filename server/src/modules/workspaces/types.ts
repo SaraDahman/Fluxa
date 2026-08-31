@@ -1,4 +1,4 @@
-import type { MemberRole } from "../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../generated/prisma/enums";
 import type { WorkspaceMemberModel } from "../../../generated/prisma/models/WorkspaceMember";
 import type { WorkspaceModel } from "../../../generated/prisma/models/Workspace";
 
@@ -10,19 +10,19 @@ export interface WorkspaceRequest extends AuthenticatedRequest {
 
 export type WorkspaceWithRole = {
   workspace: WorkspaceModel;
-  role: MemberRole;
+  role: WorkspaceRole;
 };
 
 export type MemberActor = {
   userId: string;
-  role: MemberRole;
+  role: WorkspaceRole;
 };
 
 export type WorkspaceMemberWithUser = {
   id: string;
   workspaceId: string;
   userId: string;
-  role: MemberRole;
+  role: WorkspaceRole;
   createdAt: Date;
   user: {
     id: string;
