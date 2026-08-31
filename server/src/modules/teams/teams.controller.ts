@@ -14,7 +14,7 @@ export const teamController = {
     const { workspaceId } = req.params as WorkspaceParams;
     const body = req.body as CreateTeamBody;
 
-    const team = await teamService.createTeam(req.user!.userId, workspaceId, body);
+    const team = await teamService.createTeam(workspaceId, body);
 
     res.status(201).json({
       success: true,

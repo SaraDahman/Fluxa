@@ -7,26 +7,21 @@ import type { PaginatedResponse, PaginationQuery } from "./dto/pagination.schema
 import type { TeamActor, TeamWithMembers, TeamSummary } from "./types";
 
 export const teamService = {
-  async createTeam(
-    userId: string,
-    workspaceId: string,
-    data: CreateTeamBody
-  ): Promise<TeamWithMembers> {
+  async createTeam(workspaceId: string, data: CreateTeamBody): Promise<TeamWithMembers> {
     const existing = await teamRepository.findByWorkspaceAndName(workspaceId, data.name);
 
     if (existing) {
       throw new ApiError(409, "A team with this name already exists in this workspace");
     }
 
-    const { team, member } = await teamRepository.createWithMember({
+    const team = await teamRepository.create({
       ...data,
       workspaceId,
-      userId,
     });
 
     return {
       ...team,
-      members: [member],
+      members: [],
     };
   },
 
