@@ -1,7 +1,9 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth.middleware";
+import { requireWorkspacePermission } from "../../middleware/require-permission.middleware";
 import { validate } from "../../middleware/validate.middleware";
+import { PERMISSIONS } from "../../permissions/constants";
 
 import { invitationController } from "./invitations.controller";
 
@@ -26,6 +28,7 @@ router.post(
     params: workspaceParamsSchema,
     body: createInvitationSchema,
   }),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_INVITE),
   invitationController.create
 );
 
@@ -39,11 +42,12 @@ router.post(
 );
 
 router.delete(
-  "/:invitationId",
+  "/workspaces/:workspaceId/:invitationId",
   authenticate,
   validate({
     params: invitationParamsSchema,
   }),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_INVITE),
   invitationController.revoke
 );
 

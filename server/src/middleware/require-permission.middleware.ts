@@ -1,19 +1,9 @@
 import type { NextFunction, Response } from "express";
 
-import type { AuthenticatedRequest } from "../modules/auth/types";
 import type { Permission } from "../permissions/constants";
-import {
-  resolveProjectAccess,
-  resolveWorkspaceAccess,
-  type ResolvedAccess,
-} from "../permissions/resolve";
+import { resolveProjectAccess, resolveWorkspaceAccess } from "../permissions/resolve";
+import type { PermissionRequest } from "../permissions/types";
 import { ApiError } from "../utils/api-error";
-
-// Requests that passed a permission check carry the resolved access,
-// so controllers can reuse it instead of querying memberships again.
-export interface PermissionRequest extends AuthenticatedRequest {
-  access?: ResolvedAccess;
-}
 
 /**
  * Gate a route by project-scoped permission.
