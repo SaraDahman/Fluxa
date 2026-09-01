@@ -1,7 +1,6 @@
 import type { Response } from "express";
 
 import type { AuthenticatedRequest } from "../auth/types";
-import type { PermissionRequest } from "../../permissions/types";
 
 import { teamService } from "./teams.service";
 
@@ -24,18 +23,11 @@ export const teamController = {
     });
   },
 
-  async listTeams(req: PermissionRequest, res: Response) {
+  async listTeams(req: AuthenticatedRequest, res: Response) {
     const { workspaceId } = req.params as WorkspaceParams;
     const { offset, limit } = req.query as unknown as PaginationQuery;
 
-    const result = await teamService.listTeams(
-      workspaceId,
-      {
-        userId: req.user!.userId,
-        role: req.access!.workspaceRole!,
-      },
-      { offset, limit }
-    );
+    const result = await teamService.listTeams(workspaceId, { offset, limit });
 
     res.json({
       success: true,

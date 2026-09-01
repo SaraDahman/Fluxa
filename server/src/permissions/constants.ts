@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   WORKSPACE_SET_ROLE: "workspace:setRole",
 
   TEAM_VIEW: "team:view",
+  TEAM_ACCESS: "team:access",
   TEAM_CREATE: "team:create",
   TEAM_UPDATE: "team:update",
   TEAM_DELETE: "team:delete",
@@ -52,6 +53,7 @@ export const WORKSPACE_ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
     PERMISSIONS.WORKSPACE_VIEW,
     PERMISSIONS.WORKSPACE_INVITE,
     PERMISSIONS.TEAM_VIEW,
+    PERMISSIONS.TEAM_ACCESS,
     PERMISSIONS.TEAM_CREATE,
     PERMISSIONS.TEAM_UPDATE,
     PERMISSIONS.TEAM_DELETE,

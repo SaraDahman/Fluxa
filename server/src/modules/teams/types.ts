@@ -1,10 +1,4 @@
-import type { WorkspaceRole } from "../../../generated/prisma/enums";
 import type { TeamModel } from "../../../generated/prisma/models/Team";
-
-export type TeamActor = {
-  userId: string;
-  role: WorkspaceRole;
-};
 
 export type TeamWithMembers = TeamModel & {
   members: TeamMemberWithUser[];

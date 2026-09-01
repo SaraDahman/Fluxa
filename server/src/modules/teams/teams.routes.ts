@@ -33,7 +33,7 @@ router.get(
   "/:workspaceId/teams/:teamId",
   authenticate,
   validate({ params: teamParamsSchema }),
-  requireWorkspacePermission(PERMISSIONS.TEAM_VIEW),
+  requireWorkspacePermission(PERMISSIONS.TEAM_ACCESS),
   teamController.getTeam
 );
 

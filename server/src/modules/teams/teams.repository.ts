@@ -31,12 +31,6 @@ export const teamRepository = {
     return prisma.team.findUnique({ where: { id: teamId } });
   },
 
-  findMember(teamId: string, userId: string) {
-    return prisma.teamMember.findUnique({
-      where: { teamId_userId: { teamId, userId } },
-    });
-  },
-
   listByWorkspace(workspaceId: string, skip: number, take: number) {
     return prisma.team.findMany({
       where: { workspaceId },
@@ -51,30 +45,6 @@ export const teamRepository = {
 
   countByWorkspace(workspaceId: string) {
     return prisma.team.count({ where: { workspaceId } });
-  },
-
-  listByWorkspaceForUser(workspaceId: string, userId: string, skip: number, take: number) {
-    return prisma.team.findMany({
-      where: {
-        workspaceId,
-        members: { some: { userId } },
-      },
-      include: {
-        _count: { select: { members: true } },
-      },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      skip,
-      take,
-    });
-  },
-
-  countByWorkspaceForUser(workspaceId: string, userId: string) {
-    return prisma.team.count({
-      where: {
-        workspaceId,
-        members: { some: { userId } },
-      },
-    });
   },
 
   findWithMembers(teamId: string, workspaceId: string) {
