@@ -64,13 +64,10 @@ export const invitationController = {
     });
   },
 
-  async revoke(req: Request & AuthenticatedRequest, res: Response) {
-    const { invitationId } = req.params as unknown as InvitationParams;
+  async revoke(req: AuthenticatedRequest, res: Response) {
+    const { workspaceId, invitationId } = req.params as unknown as InvitationParams;
 
-    await invitationService.revokeInvitation({
-      invitationId,
-      userId: req.user!.userId,
-    });
+    await invitationService.revokeInvitation(workspaceId, invitationId);
 
     res.status(200).json({
       success: true,
