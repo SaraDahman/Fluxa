@@ -10,7 +10,7 @@ User
      ├─ WorkspaceMember      (who belongs, with a role)
      ├─ WorkspaceInvitation  (pending invites)
      ├─ Team                 (groups members + owns projects)
-     │   └─ TeamMember       (who is in the team, with a role)
+     │   └─ TeamMember       (who is in the team, derived from ProjectMember)
      ├─ Project              (belongs to a workspace, optionally to a team)
      │   ├─ Board → Column
      │   ├─ Sprint
@@ -31,7 +31,7 @@ User
 | Enum               | Values                                                | Used by                                  |
 | ------------------ | ----------------------------------------------------- | ---------------------------------------- |
 | `WorkspaceRole`    | `OWNER`, `ADMIN`, `MEMBER`                            | `WorkspaceMember`, `WorkspaceInvitation` |
-| `TeamRole`         | `LEAD`, `MEMBER`                                      | `TeamMember`                             |
+| `ProjectRole`      | `ADMIN`, `MEMBER`                                     | `ProjectMember`                          |
 | `InvitationStatus` | `PENDING`, `ACCEPTED`, `REVOKED`, `EXPIRED`           | `WorkspaceInvitation`                    |
 | `TaskStatus`       | `BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE` | `Task`, `Column`                         |
 | `TaskType`         | `TASK`, `BUG`, `STORY`, `EPIC`                        | `Task`                                   |
@@ -61,7 +61,7 @@ User
 **Relationships:**
 
 - `memberships` → `WorkspaceMember[]` (many-to-many with workspaces)
-- `teamMemberships` → `TeamMember[]` (many-to-many with teams)
+- `teamMemberships` → `TeamMember[]` (derived from project membership, many-to-many with teams)
 - `ownedWorkspaces` → `Workspace[]` (as owner)
 - `invitationsSent` → `WorkspaceInvitation[]` (as inviter)
 - `createdProjects` → `Project[]`
@@ -147,15 +147,21 @@ User
 
 `project.schema.prisma` — maps to `team_members`
 
-| Field       | Type       | Notes            |
-| ----------- | ---------- | ---------------- |
-| `id`        | `String`   | PK, UUID         |
-| `teamId`    | `String`   | FK → `Team.id`   |
-| `userId`    | `String`   | FK → `User.id`   |
-| `role`      | `TeamRole` | Default `MEMBER` |
-| `createdAt` | `DateTime` |                  |
+| Field       | Type       | Notes          |
+| ----------- | ---------- | -------------- |
+| `id`        | `String`   | PK, UUID       |
+| `teamId`    | `String`   | FK → `Team.id` |
+| `userId`    | `String`   | FK → `User.id` |
+| `createdAt` | `DateTime` |                |
 
 **Constraints:** unique on `(teamId, userId)`. Deleting a team cascades to its members.
+
+> `TeamMember` is **role-free** and **derived** — it is never created or deleted
+> by a direct user action. Rows are kept in sync with `ProjectMember` by the
+> service layer: adding a project member upserts a TeamMember row on that
+> project's team, and removing a project member deletes the TeamMember row
+> once the user has no other project in the team. Permission to act within a
+> project comes from `ProjectRole` on `ProjectMember`, not from team membership.
 
 ---
 
@@ -178,7 +184,26 @@ User
 | `updatedAt`   | `DateTime` |                             |
 
 **Constraints:** unique on `(workspaceId, key)`.
-**Relationships:** `boards`, `sprints`, `labels`, `tasks`. Deleting a project cascades to boards, sprints, labels, and tasks.
+**Relationships:** `members`, `boards`, `sprints`, `labels`, `tasks`. Deleting a project cascades to boards, sprints, labels, and tasks.
+
+### ProjectMember
+
+`project.schema.prisma` — maps to `project_members`
+
+| Field       | Type          | Notes             |
+| ----------- | ------------- | ----------------- |
+| `id`        | `String`      | PK, UUID          |
+| `projectId` | `String`      | FK → `Project.id` |
+| `userId`    | `String`      | FK → `User.id`    |
+| `role`      | `ProjectRole` | Default `MEMBER`  |
+| `createdAt` | `DateTime`    |                   |
+
+**Constraints:** unique on `(projectId, userId)` — a user belongs to a project once. Deleting a project cascades.
+
+> `ProjectRole` is the **source of truth for authority inside a project** — `ADMIN`
+> manages the project's members and sprints, `MEMBER` works on tasks. This is what
+> backs the `PROJECT_ROLE_PERMISSIONS` matrix, and `TeamMember` membership is
+> derived from it (see [TeamMember](#teammember)).
 
 ### Board & Column
 
@@ -316,6 +341,6 @@ PK `id`, FK `taskId`, FK `actorId`, `changes` (`Json`), `createdAt`. Index on `(
 
 - All primary keys are UUID strings (`String @id @default(uuid())`).
 - Timestamps use `@default(now())` / `@updatedAt`.
-- `onDelete: Cascade` joins (`WorkspaceMember`, `TeamMember`, `TaskAssignee`, `TaskLabel`, `TaskComment`, `TaskActivity`, `Attachment`) are deleted when their parent is.
-- Composite uniques encode "may exist once" rules: `(workspaceId, userId)`, `(teamId, userId)`, `(workspaceId, email)`, `(taskId, userId)`, `(taskId, labelId)`.
+- `onDelete: Cascade` joins (`WorkspaceMember`, `TeamMember`, `ProjectMember`, `TaskAssignee`, `TaskLabel`, `TaskComment`, `TaskActivity`, `Attachment`) are deleted when their parent is.
+- Composite uniques encode "may exist once" rules: `(workspaceId, userId)`, `(teamId, userId)`, `(projectId, userId)`, `(workspaceId, email)`, `(taskId, userId)`, `(taskId, labelId)`.
 - Schema files are split by domain (`user`, `workspace`, `project`, `task`, `attachment`, `notification`) and merged by the root `prisma/schema.prisma`.
