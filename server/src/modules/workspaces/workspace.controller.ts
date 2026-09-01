@@ -1,7 +1,7 @@
 import type { Response } from "express";
 
 import type { AuthenticatedRequest } from "../auth/types";
-import type { WorkspaceRequest } from "./types";
+import type { PermissionRequest } from "../../permissions/types";
 
 import { workspaceService } from "./workspace.service";
 
@@ -32,18 +32,21 @@ export const workspaceController = {
     });
   },
 
-  async getWorkspace(req: AuthenticatedRequest, res: Response) {
+  async getWorkspace(req: PermissionRequest, res: Response) {
     const { workspaceId } = req.params as unknown as WorkspaceParams;
 
-    const workspace = await workspaceService.getWorkspace(req.user!.userId, workspaceId);
+    const workspace = await workspaceService.getWorkspace(workspaceId);
 
     res.json({
       success: true,
-      data: workspace,
+      data: {
+        workspace,
+        role: req.access!.workspaceRole!,
+      },
     });
   },
 
-  async listMembers(req: WorkspaceRequest, res: Response) {
+  async listMembers(req: AuthenticatedRequest, res: Response) {
     const { workspaceId } = req.params as unknown as WorkspaceParams;
 
     const members = await workspaceService.listMembers(workspaceId);
@@ -54,12 +57,12 @@ export const workspaceController = {
     });
   },
 
-  async updateMemberRole(req: WorkspaceRequest, res: Response) {
+  async updateMemberRole(req: PermissionRequest, res: Response) {
     const { workspaceId, userId } = req.params as unknown as MemberParams;
     const { role } = req.body as UpdateMemberRoleBody;
 
     const member = await workspaceService.updateMemberRole(
-      { userId: req.user!.userId, role: req.membership!.role },
+      req.user!.userId,
       workspaceId,
       userId,
       role
@@ -72,18 +75,25 @@ export const workspaceController = {
     });
   },
 
-  async removeMember(req: WorkspaceRequest, res: Response) {
+  async removeMember(req: PermissionRequest, res: Response) {
     const { workspaceId, userId } = req.params as unknown as MemberParams;
 
-    await workspaceService.removeMember(
-      { userId: req.user!.userId, role: req.membership!.role },
-      workspaceId,
-      userId
-    );
+    await workspaceService.removeMember(workspaceId, userId);
 
     res.json({
       success: true,
       message: "Member removed successfully",
+    });
+  },
+
+  async leaveWorkspace(req: PermissionRequest, res: Response) {
+    const { workspaceId } = req.params as unknown as WorkspaceParams;
+
+    await workspaceService.leaveWorkspace(req.user!.userId, workspaceId);
+
+    res.json({
+      success: true,
+      message: "You left the workspace",
     });
   },
 };

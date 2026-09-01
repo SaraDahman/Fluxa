@@ -1,11 +1,12 @@
-import type { MemberRole } from "../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../generated/prisma/enums";
+import type { WorkspaceModel } from "../../../generated/prisma/models/Workspace";
 
 import { ApiError } from "../../utils/api-error";
 
 import { workspaceRepository } from "./workspace.repository";
 
 import type { CreateWorkspaceBody } from "./dto/create-workspace.schema";
-import type { MemberActor, WorkspaceMemberWithUser, WorkspaceWithRole } from "./types";
+import type { WorkspaceMemberWithUser, WorkspaceWithRole } from "./types";
 
 function slugify(value: string): string {
   const slug = value
@@ -62,17 +63,14 @@ export const workspaceService = {
     }));
   },
 
-  async getWorkspace(userId: string, workspaceId: string): Promise<WorkspaceWithRole> {
-    const membership = await workspaceRepository.findMembership(workspaceId, userId);
+  async getWorkspace(workspaceId: string): Promise<WorkspaceModel> {
+    const workspace = await workspaceRepository.findById(workspaceId);
 
-    if (!membership) {
+    if (!workspace) {
       throw new ApiError(404, "Workspace not found");
     }
 
-    return {
-      workspace: membership.workspace,
-      role: membership.role,
-    };
+    return workspace;
   },
 
   async listMembers(workspaceId: string): Promise<WorkspaceMemberWithUser[]> {
@@ -80,10 +78,10 @@ export const workspaceService = {
   },
 
   async updateMemberRole(
-    actor: MemberActor,
+    userId: string,
     workspaceId: string,
     targetUserId: string,
-    role: MemberRole
+    role: WorkspaceRole
   ): Promise<WorkspaceMemberWithUser> {
     const target = await workspaceRepository.findMember(workspaceId, targetUserId);
 
@@ -91,12 +89,8 @@ export const workspaceService = {
       throw new ApiError(404, "Member not found");
     }
 
-    if (target.userId === actor.userId) {
+    if (target.userId === userId) {
       throw new ApiError(400, "You cannot change your own role");
-    }
-
-    if (actor.role === "ADMIN" && (target.role === "OWNER" || role === "OWNER")) {
-      throw new ApiError(403, "Only the workspace owner can manage owner roles");
     }
 
     if (target.role === "OWNER" && role !== "OWNER") {
@@ -112,43 +106,39 @@ export const workspaceService = {
     return member;
   },
 
-  async removeMember(actor: MemberActor, workspaceId: string, targetUserId: string): Promise<void> {
+  async removeMember(workspaceId: string, targetUserId: string): Promise<void> {
     const target = await workspaceRepository.findMember(workspaceId, targetUserId);
 
     if (!target) {
       throw new ApiError(404, "Member not found");
     }
 
-    const isSelf = target.userId === actor.userId;
+    if (target.role === "OWNER") {
+      const ownerCount = await workspaceRepository.countOwners(workspaceId);
 
-    if (isSelf) {
-      if (target.role === "OWNER") {
-        const ownerCount = await workspaceRepository.countOwners(workspaceId);
-
-        if (ownerCount <= 1) {
-          throw new ApiError(400, "You cannot leave the workspace as the last owner");
-        }
-      }
-    } else {
-      if (actor.role === "MEMBER") {
-        throw new ApiError(403, "You do not have permission to remove other members");
-      }
-
-      if (target.role === "OWNER") {
-        if (actor.role !== "OWNER") {
-          throw new ApiError(403, "Only the workspace owner can remove the owner");
-        }
-
-        const ownerCount = await workspaceRepository.countOwners(workspaceId);
-
-        if (ownerCount <= 1) {
-          throw new ApiError(400, "You cannot remove the last owner of the workspace");
-        }
-      } else if (target.role === "ADMIN" && actor.role === "ADMIN") {
-        throw new ApiError(403, "Only the workspace owner can remove admins");
+      if (ownerCount <= 1) {
+        throw new ApiError(400, "You cannot remove the last owner of the workspace");
       }
     }
 
     await workspaceRepository.removeMember(workspaceId, targetUserId);
+  },
+
+  async leaveWorkspace(userId: string, workspaceId: string): Promise<void> {
+    const membership = await workspaceRepository.findMember(workspaceId, userId);
+
+    if (!membership) {
+      throw new ApiError(404, "Workspace not found");
+    }
+
+    if (membership.role === "OWNER") {
+      const ownerCount = await workspaceRepository.countOwners(workspaceId);
+
+      if (ownerCount <= 1) {
+        throw new ApiError(400, "You cannot leave the workspace as the last owner");
+      }
+    }
+
+    await workspaceRepository.removeMember(workspaceId, userId);
   },
 };

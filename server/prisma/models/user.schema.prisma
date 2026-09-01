@@ -11,6 +11,7 @@ model User {
 
   memberships      WorkspaceMember[]
   teamMemberships  TeamMember[]
+  projectMemberships ProjectMember[]
   ownedWorkspaces  Workspace[]            @relation("WorkspaceOwner")
   invitationsSent  WorkspaceInvitation[]  @relation("Inviter")
   createdProjects  Project[]

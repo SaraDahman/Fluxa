@@ -50,7 +50,7 @@ export const invitationService = {
       throw new ApiError(404, "Workspace not found");
     }
 
-    // Find inviter's membership
+    // Find inviter's membership (used for the inviter name in the email)
     const inviter = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -65,11 +65,6 @@ export const invitationService = {
 
     if (!inviter) {
       throw new ApiError(403, "You are not a member of this workspace");
-    }
-
-    // Only OWNER and ADMIN can invite
-    if (inviter.role !== "OWNER" && inviter.role !== "ADMIN") {
-      throw new ApiError(403, "You don't have permission to invite members");
     }
 
     // Check if user is already a member
@@ -264,32 +259,11 @@ export const invitationService = {
     return member;
   },
 
-  async revokeInvitation({ invitationId, userId }: { invitationId: string; userId: string }) {
-    const invitation = await prisma.workspaceInvitation.findUnique({
-      where: {
-        id: invitationId,
-      },
-    });
+  async revokeInvitation(workspaceId: string, invitationId: string) {
+    const invitation = await invitationRepository.findByWorkspaceAndId(workspaceId, invitationId);
 
     if (!invitation) {
       throw new ApiError(404, "Invitation not found");
-    }
-
-    const member = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: invitation.workspaceId,
-          userId,
-        },
-      },
-    });
-
-    if (!member) {
-      throw new ApiError(403, "You are not a member of this workspace");
-    }
-
-    if (member.role !== "OWNER" && member.role !== "ADMIN") {
-      throw new ApiError(403, "You don't have permission to revoke invitations");
     }
 
     if (invitation.status !== "PENDING") {

@@ -1,14 +1,15 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth.middleware";
+import { requireWorkspacePermission } from "../../middleware/require-permission.middleware";
 import { validate } from "../../middleware/validate.middleware";
+import { PERMISSIONS } from "../../permissions/constants";
 
 import { workspaceController } from "./workspace.controller";
 import { createWorkspaceSchema } from "./dto/create-workspace.schema";
 import { memberParamsSchema } from "./dto/member-params.schema";
 import { updateMemberRoleSchema } from "./dto/update-member-role.schema";
 import { workspaceParamsSchema } from "./dto/workspace-params.schema";
-import { requireWorkspaceRole } from "./middleware/require-workspace-role.middleware";
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.get(
   "/:workspaceId",
   authenticate,
   validate({ params: workspaceParamsSchema }),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_VIEW),
   workspaceController.getWorkspace
 );
 
@@ -32,7 +34,7 @@ router.get(
   "/:workspaceId/members",
   authenticate,
   validate({ params: workspaceParamsSchema }),
-  requireWorkspaceRole("MEMBER"),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_VIEW),
   workspaceController.listMembers
 );
 
@@ -40,15 +42,23 @@ router.patch(
   "/:workspaceId/members/:userId",
   authenticate,
   validate({ params: memberParamsSchema, body: updateMemberRoleSchema }),
-  requireWorkspaceRole("ADMIN"),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_SET_ROLE),
   workspaceController.updateMemberRole
+);
+
+router.delete(
+  "/:workspaceId/members/me",
+  authenticate,
+  validate({ params: workspaceParamsSchema }),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_VIEW),
+  workspaceController.leaveWorkspace
 );
 
 router.delete(
   "/:workspaceId/members/:userId",
   authenticate,
   validate({ params: memberParamsSchema }),
-  requireWorkspaceRole("MEMBER"),
+  requireWorkspacePermission(PERMISSIONS.WORKSPACE_SET_ROLE),
   workspaceController.removeMember
 );
 

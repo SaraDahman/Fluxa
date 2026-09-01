@@ -11,26 +11,13 @@ const userSelect = {
 } as const;
 
 export const teamRepository = {
-  createWithMember(data: CreateTeamBody & { workspaceId: string; userId: string }) {
-    return prisma.$transaction(async (tx) => {
-      const team = await tx.team.create({
-        data: {
-          name: data.name,
-          description: data.description,
-          workspaceId: data.workspaceId,
-        },
-      });
-
-      const member = await tx.teamMember.create({
-        data: {
-          teamId: team.id,
-          userId: data.userId,
-          role: "LEAD",
-        },
-        include: { user: { select: userSelect } },
-      });
-
-      return { team, member };
+  create(data: CreateTeamBody & { workspaceId: string }) {
+    return prisma.team.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        workspaceId: data.workspaceId,
+      },
     });
   },
 
@@ -42,12 +29,6 @@ export const teamRepository = {
 
   findUnique(teamId: string) {
     return prisma.team.findUnique({ where: { id: teamId } });
-  },
-
-  findMember(teamId: string, userId: string) {
-    return prisma.teamMember.findUnique({
-      where: { teamId_userId: { teamId, userId } },
-    });
   },
 
   listByWorkspace(workspaceId: string, skip: number, take: number) {
@@ -66,37 +47,13 @@ export const teamRepository = {
     return prisma.team.count({ where: { workspaceId } });
   },
 
-  listByWorkspaceForUser(workspaceId: string, userId: string, skip: number, take: number) {
-    return prisma.team.findMany({
-      where: {
-        workspaceId,
-        members: { some: { userId } },
-      },
-      include: {
-        _count: { select: { members: true } },
-      },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      skip,
-      take,
-    });
-  },
-
-  countByWorkspaceForUser(workspaceId: string, userId: string) {
-    return prisma.team.count({
-      where: {
-        workspaceId,
-        members: { some: { userId } },
-      },
-    });
-  },
-
   findWithMembers(teamId: string, workspaceId: string) {
     return prisma.team.findFirst({
       where: { id: teamId, workspaceId },
       include: {
         members: {
           include: { user: { select: userSelect } },
-          orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+          orderBy: { createdAt: "asc" },
         },
       },
     });

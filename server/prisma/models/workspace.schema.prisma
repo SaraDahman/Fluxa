@@ -1,4 +1,4 @@
-enum MemberRole {
+enum WorkspaceRole {
   OWNER
   ADMIN
   MEMBER
@@ -35,7 +35,7 @@ model WorkspaceMember {
   id          String     @id @default(uuid())
   workspaceId String
   userId      String
-  role        MemberRole @default(MEMBER)
+  role        WorkspaceRole @default(MEMBER)
   createdAt   DateTime   @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -51,7 +51,7 @@ model WorkspaceInvitation {
   workspaceId String
   email       String
   token       String           @unique
-  role        MemberRole       @default(MEMBER)
+  role        WorkspaceRole       @default(MEMBER)
   status      InvitationStatus @default(PENDING)
   expiresAt   DateTime?
   invitedById String

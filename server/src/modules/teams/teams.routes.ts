@@ -1,8 +1,9 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth.middleware";
+import { requireWorkspacePermission } from "../../middleware/require-permission.middleware";
 import { validate } from "../../middleware/validate.middleware";
-import { requireWorkspaceRole } from "../workspaces/middleware/require-workspace-role.middleware";
+import { PERMISSIONS } from "../../permissions/constants";
 
 import { teamController } from "./teams.controller";
 import { createTeamSchema } from "./dto/create-team.schema";
@@ -16,7 +17,7 @@ router.post(
   "/:workspaceId/teams",
   authenticate,
   validate({ params: workspaceParamsSchema, body: createTeamSchema }),
-  requireWorkspaceRole("MEMBER"),
+  requireWorkspacePermission(PERMISSIONS.TEAM_CREATE),
   teamController.createTeam
 );
 
@@ -24,7 +25,7 @@ router.get(
   "/:workspaceId/teams",
   authenticate,
   validate({ params: workspaceParamsSchema, query: paginationSchema }),
-  requireWorkspaceRole("MEMBER"),
+  requireWorkspacePermission(PERMISSIONS.TEAM_VIEW),
   teamController.listTeams
 );
 
@@ -32,7 +33,7 @@ router.get(
   "/:workspaceId/teams/:teamId",
   authenticate,
   validate({ params: teamParamsSchema }),
-  requireWorkspaceRole("MEMBER"),
+  requireWorkspacePermission(PERMISSIONS.TEAM_ACCESS),
   teamController.getTeam
 );
 

@@ -24,6 +24,12 @@ export const invitationRepository = {
     });
   },
 
+  findByWorkspaceAndId(workspaceId: string, id: string) {
+    return prisma.workspaceInvitation.findFirst({
+      where: { workspaceId, id },
+    });
+  },
+
   create(data: CreateInvitationData) {
     return prisma.workspaceInvitation.create({
       data,

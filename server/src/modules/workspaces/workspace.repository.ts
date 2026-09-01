@@ -1,4 +1,4 @@
-import type { MemberRole } from "../../../generated/prisma/enums";
+import type { WorkspaceRole } from "../../../generated/prisma/enums";
 
 import { prisma } from "../../lib/prisma";
 
@@ -17,16 +17,13 @@ export const workspaceRepository = {
     return prisma.workspace.findUnique({ where: { slug } });
   },
 
+  findById(workspaceId: string) {
+    return prisma.workspace.findUnique({ where: { id: workspaceId } });
+  },
+
   findByOwnerAndName(createdBy: string, name: string) {
     return prisma.workspace.findUnique({
       where: { createdBy_name: { createdBy, name } },
-    });
-  },
-
-  findMembership(workspaceId: string, userId: string) {
-    return prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId } },
-      include: { workspace: true },
     });
   },
 
@@ -75,7 +72,7 @@ export const workspaceRepository = {
     return prisma.workspaceMember.count({ where: { workspaceId, role: "OWNER" } });
   },
 
-  updateMemberRole(workspaceId: string, userId: string, role: MemberRole) {
+  updateMemberRole(workspaceId: string, userId: string, role: WorkspaceRole) {
     return prisma.workspaceMember.update({
       where: { workspaceId_userId: { workspaceId, userId } },
       data: { role },
