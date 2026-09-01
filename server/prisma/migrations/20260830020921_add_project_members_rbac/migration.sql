@@ -27,15 +27,19 @@ ALTER TABLE "project_members" ADD CONSTRAINT "project_members_projectId_fkey" FO
 -- AddForeignKey
 ALTER TABLE "project_members" ADD CONSTRAINT "project_members_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- Backfill: promote existing team LEADS to project ADMINs so no access is
--- lost when TeamRole is dropped. For every TeamMember with role = 'LEAD',
--- create a ProjectMember (ADMIN) on every project under that team.
+-- Backfill every existing team member, mapping LEADs to project ADMINs
+-- and MEMBERs to project MEMBERs before TeamRole is dropped, so no
+-- project-scoped access is lost once authorization uses ProjectMember.
 INSERT INTO "project_members" ("id", "projectId", "userId", "role", "createdAt")
-SELECT gen_random_uuid(), p."id", tm."userId", 'ADMIN', now()
+SELECT gen_random_uuid(), p."id", tm."userId",
+       CASE tm."role"
+           WHEN 'LEAD' THEN 'ADMIN'::"ProjectRole"
+           ELSE 'MEMBER'::"ProjectRole"
+       END,
+       now()
 FROM "team_members" tm
 JOIN "teams" t ON t."id" = tm."teamId"
-JOIN "projects" p ON p."teamId" = t."id"
-WHERE tm."role" = 'LEAD';
+JOIN "projects" p ON p."teamId" = t."id";
 
 -- AlterTable: TeamMember no longer carries a role (derived from ProjectMember only)
 ALTER TABLE "team_members" DROP COLUMN "role";
