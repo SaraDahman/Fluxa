@@ -1,16 +1,19 @@
 title: "Milestone 3: Teams"
-description: "Team management, members, and roles"
+description: "Team management built on the centralized RBAC permission matrix"
 
 issues:
   - title: "Team management"
     description: |
-      Implement full CRUD for teams within a workspace. Teams group members and own projects.
+      Implement team CRUD within a workspace. Teams group members and own projects. Team
+      membership is role-free and derived from ProjectMember (no TeamRole enum, no
+      membership lifecycle endpoints). All authority is enforced via the permission
+      matrix in `server/src/permissions/constants.ts`.
     labels:
       - enhancement
     children:
       - title: "Create team"
         description: |
-          Allow workspace owners/admins to create a new team.
+          Allow workspace admins/owners to create a new team.
 
           **Endpoints:**
           - `POST /workspaces/:workspaceId/teams`
@@ -20,33 +23,85 @@ issues:
           **Steps:**
           - Create `server/src/modules/teams/` (controller, service, repository, DTOs, routes)
           - Add Zod validation schema for create team
-          - Auto-add creator as team member with LEAD role
-          - Return created team with membership
+          - Guard with `requireWorkspacePermission(TEAM_CREATE)` (ADMIN/OWNER via matrix)
+          - No TeamMember record is created on team creation — membership is derived from ProjectMember
+          - Return `{ ...team, members: [] }`
 
       - title: "View teams"
         description: |
-          List all teams in the current workspace.
+          List all teams in the current workspace. Visible to every workspace member.
 
           **Endpoints:**
           - `GET /workspaces/:workspaceId/teams`
 
           **Steps:**
+          - Guard with `requireWorkspacePermission(TEAM_VIEW)` (all members via matrix)
           - Return teams with member count
           - Support pagination (offset/limit)
 
       - title: "View team details"
         description: |
-          Get a single team with its members and projects.
+          Open a single team. Restricted to workspace admins/owners only.
 
           **Endpoints:**
           - `GET /workspaces/:workspaceId/teams/:teamId`
 
           **Steps:**
+          - Guard with `requireWorkspacePermission(TEAM_ACCESS)` (ADMIN/OWNER via matrix)
+          - Team membership does NOT grant access — authority comes from the workspace role
           - Return team info + members list + projects list
 
+  - title: "Team permissions & authorization"
+    description: |
+      Authorization is enforced centrally by the permission matrix and middleware, not by
+      a per-team role. Workspace roles are the source of authority for team-scoped actions.
+    labels:
+      - enhancement
+    children:
+      - title: "Permission matrix entries"
+        description: |
+          Add team permissions to the workspace role matrix.
+
+          **Permissions added:**
+          | Permission   | Key          | MEMBER | ADMIN/OWNER |
+          |--------------|--------------|--------|-------------|
+          | View teams   | `team:view`  | ✅     | ✅          |
+          | Open team    | `team:access`| ❌     | ✅          |
+          | Create team  | `team:create`| ❌     | ✅          |
+          | Update team  | `team:update`| ❌     | ✅          |
+          | Delete team  | `team:delete`| ❌     | ✅          |
+
+      - title: "Permission middleware"
+        description: |
+          Enforce team permissions through the shared RBAC middleware.
+
+          **Steps:**
+          - Use `requireWorkspacePermission(PERMISSIONS.TEAM_*)` from
+            `server/src/middleware/require-permission.middleware.ts`
+          - Apply to team routes; return 403 if the caller's resolved workspace access
+            lacks the required permission
+          - `validate` middleware handles param/body validation; permission middleware
+            only reads `req.access` (already resolved permissions)
+
+      - title: "Derived team membership"
+        description: |
+          Team membership is not stored directly; it is derived from ProjectMember.
+
+          **Steps:**
+          - `TeamMember` model is role-free (no `TeamRole` enum; `TeamRole` dropped from schema)
+          - Membership is computed from members of the team's projects
+          - No add/remove/update-role endpoints — there is no manual membership lifecycle
+
+  - title: "Team update & delete (future work)"
+    description: |
+      Mutating team operations beyond create. Routes are not yet built; guarded by the
+      matrix when they land.
+    labels:
+      - enhancement
+    children:
       - title: "Update team"
         description: |
-          Allow team leads and workspace admins to update team info.
+          Update team info.
 
           **Endpoints:**
           - `PATCH /workspaces/:workspaceId/teams/:teamId`
@@ -54,131 +109,17 @@ issues:
           **Body:** `{ name?: string, description?: string }`
 
           **Steps:**
-          - Validate permissions (LEAD or workspace ADMIN/OWNER)
+          - Guard with `requireWorkspacePermission(TEAM_UPDATE)`
           - Update team fields
 
       - title: "Delete team"
         description: |
-          Allow workspace owners to delete a team. Projects are unlinked, not deleted.
+          Delete a team. Projects are unlinked, not deleted.
 
           **Endpoints:**
           - `DELETE /workspaces/:workspaceId/teams/:teamId`
 
           **Steps:**
-          - Validate permissions (workspace OWNER only)
-          - Delete team and all TeamMember records (cascade)
+          - Guard with `requireWorkspacePermission(TEAM_DELETE)`
+          - Delete team and its ProjectMember-derived links (no standalone TeamMember records)
           - Set `teamId = null` on linked projects
-
-  - title: "Team members"
-    description: |
-      Manage membership within a team. Members must already belong to the workspace.
-    labels:
-      - enhancement
-    children:
-      - title: "Add member to team"
-        description: |
-          Add an existing workspace member to a team.
-
-          **Endpoints:**
-          - `POST /workspaces/:workspaceId/teams/:teamId/members`
-
-          **Body:** `{ userId: string, role?: "LEAD" | "MEMBER" }`
-
-          **Steps:**
-          - Verify target user is a workspace member
-          - Verify caller has permission (LEAD or workspace ADMIN)
-          - Create TeamMember record
-          - Default role: MEMBER
-
-      - title: "Remove member from team"
-        description: |
-          Remove a member from a team.
-
-          **Endpoints:**
-          - `DELETE /workspaces/:workspaceId/teams/:teamId/members/:userId`
-
-          **Steps:**
-          - Verify caller has permission (LEAD or workspace ADMIN)
-          - Prevent removing the last LEAD
-          - Delete TeamMember record
-
-      - title: "Prevent duplicate team membership"
-        description: |
-          Enforce unique constraint on (teamId, userId).
-
-          **Steps:**
-          - Return 409 if user is already a team member
-          - Handled by Prisma `@@unique([teamId, userId])`
-
-      - title: "List team members"
-        description: |
-          List all members of a team with their roles.
-
-          **Endpoints:**
-          - `GET /workspaces/:workspaceId/teams/:teamId/members`
-
-          **Steps:**
-          - Return members with user info (name, email, avatar) and role
-          - Sort by role (LEAD first), then by join date
-
-  - title: "Team roles & permissions"
-    description: |
-      Define and enforce roles within teams. Requires a schema migration.
-    labels:
-      - enhancement
-    children:
-      - title: "Add role column to TeamMember"
-        description: |
-          **Migration:** Add `role` field to `team_members` table.
-
-          **Steps:**
-          - Add `role TeamRole @default(MEMBER)` to TeamMember model
-          - Add `TeamRole` enum: `LEAD`, `MEMBER`
-          - Run `prisma migrate dev`
-          - Existing members get MEMBER role by default
-
-      - title: "Define team roles"
-        description: |
-          Define the TeamRole enum and its permissions matrix.
-
-          **Permissions:**
-          | Action                  | LEAD | MEMBER |
-          |-------------------------|------|--------|
-          | View team               | ✅   | ✅     |
-          | Create project          | ✅   | ❌     |
-          | Manage members          | ✅   | ❌     |
-          | Update member roles     | ✅   | ❌     |
-          | Update team settings    | ✅   | ❌     |
-          | Delete team             | ❌   | ❌ (OWNER only) |
-
-      - title: "Assign role when adding member"
-        description: |
-          Allow specifying a role when adding a member to a team.
-
-          **Steps:**
-          - Accept `role` in POST /members body
-          - Validate role is a valid TeamRole
-          - Default to MEMBER if not provided
-
-      - title: "Update member role"
-        description: |
-          Allow team leads to change a member's role.
-
-          **Endpoints:**
-          - `PATCH /workspaces/:workspaceId/teams/:teamId/members/:userId`
-
-          **Body:** `{ role: "LEAD" | "MEMBER" }`
-
-          **Steps:**
-          - Verify caller is LEAD or workspace ADMIN
-          - Prevent demoting the last LEAD
-          - Update role field
-
-      - title: "Enforce permissions"
-        description: |
-          Create middleware to enforce team-level permissions.
-
-          **Steps:**
-          - Create `requireTeamRole` middleware (similar to `requireWorkspaceRole`)
-          - Apply to team management routes
-          - Return 403 if user lacks required role
