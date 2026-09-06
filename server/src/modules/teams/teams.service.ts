@@ -71,12 +71,10 @@ export const teamService = {
   },
 
   async deleteTeam(teamId: string, workspaceId: string): Promise<void> {
-    const existing = await teamRepository.findUnique(teamId);
+    const result = await teamRepository.delete(teamId, workspaceId);
 
-    if (!existing || existing.workspaceId !== workspaceId) {
+    if (result.count === 0) {
       throw new ApiError(404, "Team not found");
     }
-
-    await teamRepository.delete(teamId);
   },
 };
