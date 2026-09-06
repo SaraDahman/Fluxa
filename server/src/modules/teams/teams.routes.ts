@@ -9,6 +9,7 @@ import { teamController } from "./teams.controller";
 import { createTeamSchema } from "./dto/create-team.schema";
 import { paginationSchema } from "./dto/pagination.schema";
 import { teamParamsSchema } from "./dto/team-params.schema";
+import { updateTeamSchema } from "./dto/update-team.schema";
 import { workspaceParamsSchema } from "./dto/workspace-params.schema";
 
 const router = Router({ mergeParams: true });
@@ -35,6 +36,14 @@ router.get(
   validate({ params: teamParamsSchema }),
   requireWorkspacePermission(PERMISSIONS.TEAM_ACCESS),
   teamController.getTeam
+);
+
+router.patch(
+  "/:workspaceId/teams/:teamId",
+  authenticate,
+  validate({ params: teamParamsSchema, body: updateTeamSchema }),
+  requireWorkspacePermission(PERMISSIONS.TEAM_UPDATE),
+  teamController.updateTeam
 );
 
 export default router;
