@@ -75,4 +75,19 @@ export const teamController = {
       next(error);
     }
   },
+
+  async deleteTeam(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { workspaceId, teamId } = req.params as TeamParams;
+
+      await teamService.deleteTeam(teamId, workspaceId);
+
+      res.json({
+        success: true,
+        message: "Team deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
