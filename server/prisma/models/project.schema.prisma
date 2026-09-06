@@ -44,6 +44,7 @@ model Team {
   projects  Project[]
 
   @@index([workspaceId])
+  @@unique([workspaceId, name])
   @@map("teams")
 }
 
