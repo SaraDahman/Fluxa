@@ -67,9 +67,9 @@ export const teamRepository = {
     });
   },
 
-  delete(teamId: string) {
-    return prisma.team.delete({
-      where: { id: teamId },
+  delete(teamId: string, workspaceId: string) {
+    return prisma.team.deleteMany({
+      where: { id: teamId, workspaceId },
     });
   },
 };
