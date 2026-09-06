@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 
 import type { CreateTeamBody } from "./dto/create-team.schema";
+import type { UpdateTeamBody } from "./dto/update-team.schema";
 
 const userSelect = {
   id: true,
@@ -56,6 +57,13 @@ export const teamRepository = {
           orderBy: { createdAt: "asc" },
         },
       },
+    });
+  },
+
+  update(teamId: string, data: UpdateTeamBody) {
+    return prisma.team.update({
+      where: { id: teamId },
+      data,
     });
   },
 };

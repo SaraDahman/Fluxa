@@ -1,6 +1,6 @@
 import ms from "ms";
 
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 import { env } from "../../config/env";
 
@@ -41,75 +41,95 @@ function clearRefreshTokenCookie(res: Response) {
 }
 
 export const authController = {
-  async signUp(req: Request, res: Response) {
-    const body = req.body as SignUpBody;
+  async signUp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const body = req.body as SignUpBody;
 
-    const { user, accessToken, refreshToken } = await authService.signUp(body);
+      const { user, accessToken, refreshToken } = await authService.signUp(body);
 
-    setRefreshTokenCookie(res, refreshToken);
+      setRefreshTokenCookie(res, refreshToken);
 
-    res.status(201).json({
-      success: true,
-      message: "Account created successfully",
-      data: user,
-      accessToken,
-    });
+      res.status(201).json({
+        success: true,
+        message: "Account created successfully",
+        data: user,
+        accessToken,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  async signIn(req: Request, res: Response) {
-    const body = req.body as SignInBody;
+  async signIn(req: Request, res: Response, next: NextFunction) {
+    try {
+      const body = req.body as SignInBody;
 
-    const { user, accessToken, refreshToken } = await authService.signIn(body);
+      const { user, accessToken, refreshToken } = await authService.signIn(body);
 
-    setRefreshTokenCookie(res, refreshToken);
+      setRefreshTokenCookie(res, refreshToken);
 
-    res.json({
-      success: true,
-      message: "Signed in successfully",
-      data: user,
-      accessToken,
-    });
+      res.json({
+        success: true,
+        message: "Signed in successfully",
+        data: user,
+        accessToken,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  async refresh(req: Request, res: Response) {
-    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
+  async refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+      const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
 
-    const {
-      user,
-      accessToken,
-      refreshToken: newRefreshToken,
-    } = await authService.refresh(refreshToken);
+      const {
+        user,
+        accessToken,
+        refreshToken: newRefreshToken,
+      } = await authService.refresh(refreshToken);
 
-    setRefreshTokenCookie(res, newRefreshToken);
+      setRefreshTokenCookie(res, newRefreshToken);
 
-    res.json({
-      success: true,
-      message: "Tokens refreshed successfully",
-      data: user,
-      accessToken,
-    });
+      res.json({
+        success: true,
+        message: "Tokens refreshed successfully",
+        data: user,
+        accessToken,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  async logout(_req: Request, res: Response) {
-    clearRefreshTokenCookie(res);
+  async logout(_req: Request, res: Response, next: NextFunction) {
+    try {
+      clearRefreshTokenCookie(res);
 
-    res.json({
-      success: true,
-      message: "Signed out successfully",
-    });
+      res.json({
+        success: true,
+        message: "Signed out successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  async getMe(req: AuthenticatedRequest, res: Response) {
-    const userId = req.user!.userId;
+  async getMe(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.userId;
 
-    const [user, workspaces] = await Promise.all([
-      authService.getUserById(userId),
-      workspaceService.listWorkspaces(userId),
-    ]);
+      const [user, workspaces] = await Promise.all([
+        authService.getUserById(userId),
+        workspaceService.listWorkspaces(userId),
+      ]);
 
-    res.json({
-      success: true,
-      data: { user, workspaces },
-    });
+      res.json({
+        success: true,
+        data: { user, workspaces },
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 };
