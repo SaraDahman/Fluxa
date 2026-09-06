@@ -66,4 +66,10 @@ export const teamRepository = {
       data,
     });
   },
+
+  delete(teamId: string) {
+    return prisma.team.delete({
+      where: { id: teamId },
+    });
+  },
 };

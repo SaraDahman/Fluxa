@@ -46,4 +46,12 @@ router.patch(
   teamController.updateTeam
 );
 
+router.delete(
+  "/:workspaceId/teams/:teamId",
+  authenticate,
+  validate({ params: teamParamsSchema }),
+  requireWorkspacePermission(PERMISSIONS.TEAM_DELETE),
+  teamController.deleteTeam
+);
+
 export default router;
