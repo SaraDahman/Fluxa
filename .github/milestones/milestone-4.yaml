@@ -1,0 +1,251 @@
+title: "Milestone 4: Team Management"
+description: "Team management beyond CRUD: minimal project create/update endpoints, assign projects to teams, derive team membership from project membership, and search/filter the team list."
+
+issues:
+  - title: "Project management (create & update)"
+    description: |
+      Teams own projects and team membership is derived from project membership, so a
+      minimal project module is the prerequisite for everything else in this milestone.
+      The `Project` model already exists (`server/prisma/models/project.schema.prisma`),
+      but there are no endpoints yet.
+
+      Follow the same vertical slice: `server/src/modules/projects/` with controller →
+      service → repository, `dto/` Zod schemas, and `projects.routes.ts` mounted in
+      `server/src/routes/index.ts` under `/api/v1`.
+
+      **Permission model (per `server/src/permissions/constants.ts`):**
+      - Create project → `requireWorkspacePermission(PERMISSIONS.PROJECT_CREATE)`
+        (workspace ADMIN/OWNER).
+      - Update project → `requireProjectPermission(PERMISSIONS.PROJECT_UPDATE)`
+        (project ADMIN).
+    labels:
+      - enhancement
+    children:
+      - title: "Create project"
+        description: |
+          Create a project in the workspace and auto-join the creator as an ADMIN.
+
+          **Endpoints:**
+          - `POST /workspaces/:workspaceId/projects`
+
+          **Body:** `{ name: string, key: string, description?: string, teamId?: string }`
+
+          **Steps:**
+          - Create `server/src/modules/projects/` (controller, service, repository, DTOs, routes)
+          - Add Zod schemas: params (`workspaceId` uuid) and body (`name` 1–100 chars,
+            `key` uppercase alphanumeric 2–10 chars, `description` ≤ 500, `teamId` optional uuid)
+          - Guard with `requireWorkspacePermission(PERMISSIONS.PROJECT_CREATE)`
+          - If `teamId` is provided, verify the team belongs to the workspace, else `404` —
+            a project can never reference a team from another workspace
+          - Set `createdBy = req.user!.userId` and ensure `key` is unique per workspace
+            (`@@unique([workspaceId, key])`); the optimized pre-check plus the DB
+            constraint on `(workspaceId, key)` both return `409` on mismatch
+          - Insert the project **and** create a `ProjectMember` row for the creator with
+            `role: ADMIN` (a creator always administrates their project)
+          - Return `201` with the created project (including its members or member count)
+
+          **Errors:** `401` · `403` (not workspace ADMIN/OWNER) · `404` (team not in this
+          workspace) · `409` (project key already used) · `400` validation.
+
+      - title: "Update project"
+        description: |
+          Update a project's fields, including moving it between teams.
+
+          **Endpoints:**
+          - `PATCH /workspaces/:workspaceId/projects/:projectId`
+
+          **Body:** `{ name?: string, description?: string, teamId?: string | null }`
+
+          **Steps:**
+          - Add the `projectId` uuid to a params schema; use the `validate` middleware
+          - Guard with `requireProjectPermission(PERMISSIONS.PROJECT_UPDATE)` (project ADMIN)
+          - If `teamId` is provided, verify the team belongs to the workspace, else `404`
+          - Accept `teamId: null` to unassign the project from its team
+          - `key` is **immutable** after creation — do not expose it in the update DTO
+          - Prefer a single atomic, workspace-scoped update (`updateMany` with
+            `where: { id, workspaceId }`) and check the affected count for the `404`,
+            avoiding a check-then-act race on concurrent updates
+          - Return `200` with the updated project
+
+          **Errors:** `401` · `403` (not project ADMIN) · `404` (project or team not found)
+          · `400` validation (incl. empty body).
+
+  - title: "Team–project assignment"
+    description: |
+      Teams own projects — each `Project` has an optional `teamId`. This issue group wires up
+      that association: assign a project to a team, remove it, and list a team's projects.
+
+      All endpoints live in `server/src/modules/teams/` and follow the existing vertical
+      slice: controller → service → repository, with `dto/` Zod schemas and `*.routes.ts`.
+      Projects are **never deleted** here — assignment only writes `projects.teamId`.
+
+      **Permission model (confirm against `server/src/permissions/constants.ts`):**
+      - Assign/remove are team-management actions → workspace ADMIN/OWNER
+        (`requireWorkspacePermission(TEAM_UPDATE)`).
+      - Listing a team's projects is "opening" the team → workspace ADMIN/OWNER
+        (`requireWorkspacePermission(TEAM_ACCESS)`).
+    labels:
+      - enhancement
+    children:
+      - title: "Assign project to team"
+        description: |
+          Attach a project to a team by setting `project.teamId`.
+
+          **Endpoints:**
+          - `PUT /workspaces/:workspaceId/teams/:teamId/projects/:projectId`
+
+          **Steps:**
+          - Add a Zod params schema (or extend `team-params.schema.ts`) validating
+            `workspaceId`, `teamId`, `projectId` as uuids; use the `validate` middleware
+          - Guard with `requireWorkspacePermission(PERMISSIONS.TEAM_UPDATE)`
+          - Verify the team exists in the workspace, else `404`
+          - Verify the project exists in the workspace, else `404`
+          - Set `project.teamId = teamId` via the repository
+          - **Idempotent:** assigning a project that is already in this team succeeds with
+            `200` (no-op), not an error
+          - Return `200` with the updated project (or the team's project list)
+
+          **Errors:** `401` · `403` · `404` (team or project not found) · `400` validation.
+
+      - title: "Remove project from team"
+        description: |
+          Detach a project from a team by clearing its `teamId`.
+
+          **Endpoints:**
+          - `DELETE /workspaces/:workspaceId/teams/:teamId/projects/:projectId`
+
+          **Steps:**
+          - Reuse the params schema and `validate` middleware from the assign issue
+          - Guard with `requireWorkspacePermission(PERMISSIONS.TEAM_UPDATE)`
+          - Verify the project currently belongs to **this** team, else `404`
+          - Set `project.teamId = null`
+          - Prefer an atomic, workspace-scoped update (e.g. `updateMany` with
+            `where: { id, workspaceId, teamId }`) and check the affected count for the
+            `404`, avoiding a check-then-act race on concurrent removes
+          - Return `200` with a success message
+
+          **Errors:** `401` · `403` · `404` (team not found, or project not in this team).
+
+      - title: "List team projects"
+        description: |
+          List the projects currently assigned to a team.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams/:teamId/projects`
+
+          **Steps:**
+          - Guard with `requireWorkspacePermission(PERMISSIONS.TEAM_ACCESS)`
+          - Verify the team exists in the workspace, else `404`
+          - Return projects for `project.teamId = teamId`, paginated with the existing
+            `paginationSchema` (offset/limit), ordered by `createdAt`
+          - Return `200` with `{ items, total, offset, limit }`
+
+          **Errors:** `401` · `403` · `404` team not found.
+
+  - title: "Team members (derived from projects)"
+    description: |
+      Team membership is **derived**: a user belongs to a team when they are a member
+      (`ProjectMember`) of any of the team's projects. There are no direct add/remove
+      endpoints — members appear/disappear as project membership changes.
+
+      Note: the `TeamMember` table is legacy and nothing writes to it anymore. Membership
+      and counts must come from `ProjectMember` across the team's projects, **not** from
+      the `TeamMember` relation.
+    labels:
+      - enhancement
+    children:
+      - title: "Derive team membership from projects"
+        description: |
+          Build the query helper that computes a team's members from `ProjectMember`.
+
+          **Steps:**
+          - Add repository support to fetch the distinct users who are `ProjectMember`s of
+            the team's projects (query `ProjectMember` where
+            `project.teamId = teamId`)
+          - Return the user info (id, email, username, title, avatar) plus the project
+            roles they hold across those projects
+          - Keep it reusable: the same helper backs "list team members" and "member counts"
+          - Do **not** rely on the `TeamMember` table
+
+      - title: "List team members"
+        description: |
+          List a team's derived members.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams/:teamId/members`
+
+          **Steps:**
+          - Guard with `requireWorkspacePermission(PERMISSIONS.TEAM_ACCESS)`
+          - Verify the team exists in the workspace, else `404`
+          - Return each distinct member with user info and their project roles on the
+            team's projects (a user can hold ADMIN in one project and MEMBER in another —
+            surface the roles explicitly)
+          - Return `200` with the members array
+
+          **Errors:** `401` · `403` · `404` team not found.
+
+      - title: "Show member counts in team list"
+        description: |
+          The team list currently reports a stale `_count.members` from the unused
+          `TeamMember` table. Replace it with derived counts.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams` (existing route)
+
+          **Steps:**
+          - Guard stays `requireWorkspacePermission(PERMISSIONS.TEAM_VIEW)`
+          - Compute, per team, the count of distinct `ProjectMember` users across its
+            projects (a batch query joining `teams → projects → project_members`, since
+            per-team `$transaction` calls would N+1 the list)
+          - Attach it to each team item (e.g. `_count.members` keeps its shape so the
+            response contract doesn't break, but now reflects derived membership)
+          - Teams with no projects report `0`
+
+  - title: "Search & filtering for teams"
+    description: |
+      Make `GET /workspaces/:workspaceId/teams` useful at scale: filter by name, choose
+      an ordering, and keep pagination deterministic.
+    labels:
+      - enhancement
+    children:
+      - title: "Search teams by name"
+        description: |
+          Filter the team list by a name query.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams?q=…` (extend the existing route)
+
+          **Steps:**
+          - Add an optional `q` query param to `pagination.schema.ts` (trim, max length,
+            empty = no filter)
+          - Apply case-insensitive substring match on `name`
+            (`contains: q, mode: "insensitive"`) in the repository `listByWorkspace` where
+          - Keep `countByWorkspace` consistent with the same filter so `total` matches the
+            filtered list
+          - Guard stays `requireWorkspacePermission(PERMISSIONS.TEAM_VIEW)`
+
+      - title: "Sort teams"
+        description: |
+          Let clients choose the ordering of the team list.
+
+          **Endpoints:**
+          - `GET /workspaces/:workspaceId/teams?sort=…&order=…` (extend the existing route)
+
+          **Steps:**
+          - Add `sort` (`createdAt` | `name`, default `createdAt`) and `order`
+            (`asc` | `desc`, default `asc`) query params, validated by the `pagination.schema`
+          - Map them into the repository's `orderBy`, keeping a deterministic secondary
+            sort by `id` to break ties
+          - `total` is unaffected by sorting
+
+      - title: "Pagination & stable ordering"
+        description: |
+          Guarantee stable, consistent paging once search/sort exist.
+
+          **Steps:**
+          - Verify `offset`/`limit` still flow through `paginationSchema` (defaults
+            `offset: 0`, `limit: 20`, max `100`)
+          - Ensure every list query ends with the deterministic `id` tie-breaker so pages
+            don't duplicate or skip rows when records are created mid-pagination
+          - Add/adjust tests or manual checks that `offset + total` paging is stable under
+            search and sort
