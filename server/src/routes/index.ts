@@ -5,6 +5,7 @@ import userRoutes from "../modules/users/user.routes";
 import workspaceRoutes from "../modules/workspaces/workspace.routes";
 import invitationRoutes from "../modules/invitations/invitations.routes";
 import teamRoutes from "../modules/teams/teams.routes";
+import projectRoutes from "../modules/projects/projects.routes";
 
 const router = Router();
 
@@ -22,6 +23,8 @@ router.use("/users", userRoutes);
 router.use("/workspaces", workspaceRoutes);
 
 router.use("/workspaces", teamRoutes);
+
+router.use("/workspaces", projectRoutes);
 
 router.use("/invitations", invitationRoutes);
 export default router;
