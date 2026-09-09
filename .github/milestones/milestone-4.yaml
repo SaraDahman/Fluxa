@@ -23,25 +23,28 @@ issues:
     children:
       - title: "Create project"
         description: |
-          Create a project in the workspace and auto-join the creator as an ADMIN.
+          Create a project in the workspace, with optional creator membership.
 
           **Endpoints:**
           - `POST /workspaces/:workspaceId/projects`
 
-          **Body:** `{ name: string, key: string, description?: string, teamId?: string }`
+          **Body:** `{ name: string, key: string, description?: string, teamId?: string, addCreatorAsMember?: boolean }`
 
           **Steps:**
           - Create `server/src/modules/projects/` (controller, service, repository, DTOs, routes)
           - Add Zod schemas: params (`workspaceId` uuid) and body (`name` 1–100 chars,
-            `key` uppercase alphanumeric 2–10 chars, `description` ≤ 500, `teamId` optional uuid)
+            `key` uppercase alphanumeric 2–10 chars, `description` ≤ 500, `teamId` optional uuid,
+            `addCreatorAsMember` optional boolean, defaults to `true`)
           - Guard with `requireWorkspacePermission(PERMISSIONS.PROJECT_CREATE)`
           - If `teamId` is provided, verify the team belongs to the workspace, else `404` —
             a project can never reference a team from another workspace
           - Set `createdBy = req.user!.userId` and ensure `key` is unique per workspace
             (`@@unique([workspaceId, key])`); the optimized pre-check plus the DB
             constraint on `(workspaceId, key)` both return `409` on mismatch
-          - Insert the project **and** create a `ProjectMember` row for the creator with
-            `role: ADMIN` (a creator always administrates their project)
+          - In one transaction: insert the project and, when `addCreatorAsMember` (default
+            `true`), create a `ProjectMember` row for the creator with `role: ADMIN`.
+            When unset, `createdBy` still records the creator for audit, but they hold no
+            project role — their access is whatever their workspace role grants
           - Return `201` with the created project (including its members or member count)
 
           **Errors:** `401` · `403` (not workspace ADMIN/OWNER) · `404` (team not in this
