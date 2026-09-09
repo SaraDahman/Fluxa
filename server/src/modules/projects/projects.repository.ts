@@ -16,16 +16,33 @@ export const projectRepository = {
     });
   },
 
-  create(data: CreateProjectBody & { workspaceId: string; createdBy: string }) {
-    return prisma.project.create({
-      data: {
-        name: data.name,
-        key: data.key,
-        description: data.description,
-        workspaceId: data.workspaceId,
-        teamId: data.teamId,
-        createdBy: data.createdBy,
-      },
+  create(
+    data: CreateProjectBody & { workspaceId: string; createdBy: string },
+    addCreatorAsMember: boolean
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const project = await tx.project.create({
+        data: {
+          name: data.name,
+          key: data.key,
+          description: data.description,
+          workspaceId: data.workspaceId,
+          teamId: data.teamId,
+          createdBy: data.createdBy,
+        },
+      });
+
+      if (addCreatorAsMember) {
+        await tx.projectMember.create({
+          data: {
+            projectId: project.id,
+            userId: data.createdBy,
+            role: "ADMIN",
+          },
+        });
+      }
+
+      return project;
     });
   },
 };

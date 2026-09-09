@@ -26,10 +26,15 @@ export const projectService = {
       }
     }
 
-    return projectRepository.create({
-      ...data,
-      workspaceId,
-      createdBy: userId,
-    });
+    const addCreatorAsMember = data.addCreatorAsMember ?? false;
+
+    return projectRepository.create(
+      {
+        ...data,
+        workspaceId,
+        createdBy: userId,
+      },
+      addCreatorAsMember
+    );
   },
 };

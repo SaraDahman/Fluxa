@@ -13,6 +13,7 @@ export const createProjectSchema = z.object({
     .regex(/^[A-Z0-9]{2,10}$/, "Project key must be 2–10 uppercase letters or numbers"),
   description: z.string().trim().max(500, "Description cannot exceed 500 characters").optional(),
   teamId: z.uuid("Invalid team ID").optional(),
+  addCreatorAsMember: z.boolean().optional(),
 });
 
 export type CreateProjectBody = z.infer<typeof createProjectSchema>;
