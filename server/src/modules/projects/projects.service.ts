@@ -5,6 +5,7 @@ import { ApiError } from "../../utils/api-error";
 import { projectRepository } from "./projects.repository";
 
 import type { CreateProjectBody } from "./dto/create-project.schema";
+import type { UpdateProjectBody } from "./dto/update-project.schema";
 
 export const projectService = {
   async createProject(
@@ -36,5 +37,27 @@ export const projectService = {
       },
       addCreatorAsMember
     );
+  },
+
+  async updateProject(
+    projectId: string,
+    workspaceId: string,
+    data: UpdateProjectBody
+  ): Promise<ProjectModel> {
+    const project = await projectRepository.findById(projectId);
+
+    if (!project || project.workspaceId !== workspaceId) {
+      throw new ApiError(404, "Project not found");
+    }
+
+    if (data.teamId) {
+      const team = await projectRepository.findTeamInWorkspace(data.teamId, workspaceId);
+
+      if (!team) {
+        throw new ApiError(404, "Team not found");
+      }
+    }
+
+    return projectRepository.update(projectId, data);
   },
 };

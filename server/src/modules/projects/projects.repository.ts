@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 
 import type { CreateProjectBody } from "./dto/create-project.schema";
+import type { UpdateProjectBody } from "./dto/update-project.schema";
 
 export const projectRepository = {
   findByWorkspaceAndKey(workspaceId: string, key: string) {
@@ -43,6 +44,19 @@ export const projectRepository = {
       }
 
       return project;
+    });
+  },
+
+  findById(projectId: string) {
+    return prisma.project.findUnique({
+      where: { id: projectId },
+    });
+  },
+
+  update(projectId: string, data: UpdateProjectBody) {
+    return prisma.project.update({
+      where: { id: projectId },
+      data,
     });
   },
 };
