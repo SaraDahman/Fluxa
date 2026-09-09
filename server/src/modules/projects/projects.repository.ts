@@ -47,6 +47,12 @@ export const projectRepository = {
     });
   },
 
+  findById(projectId: string) {
+    return prisma.project.findUnique({
+      where: { id: projectId },
+    });
+  },
+
   update(projectId: string, data: UpdateProjectBody) {
     return prisma.project.update({
       where: { id: projectId },

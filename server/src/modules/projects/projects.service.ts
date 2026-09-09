@@ -44,6 +44,12 @@ export const projectService = {
     workspaceId: string,
     data: UpdateProjectBody
   ): Promise<ProjectModel> {
+    const project = await projectRepository.findById(projectId);
+
+    if (!project || project.workspaceId !== workspaceId) {
+      throw new ApiError(404, "Project not found");
+    }
+
     if (data.teamId) {
       const team = await projectRepository.findTeamInWorkspace(data.teamId, workspaceId);
 
