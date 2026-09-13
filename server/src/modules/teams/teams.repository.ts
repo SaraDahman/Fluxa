@@ -72,4 +72,11 @@ export const teamRepository = {
       where: { id: teamId, workspaceId },
     });
   },
+
+  removeProjectFromTeam(projectId: string, workspaceId: string, teamId: string) {
+    return prisma.project.updateMany({
+      where: { id: projectId, workspaceId, teamId },
+      data: { teamId: null },
+    });
+  },
 };

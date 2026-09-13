@@ -9,6 +9,7 @@ import { teamController } from "./teams.controller";
 import { createTeamSchema } from "./dto/create-team.schema";
 import { paginationSchema } from "./dto/pagination.schema";
 import { teamParamsSchema } from "./dto/team-params.schema";
+import { teamProjectParamsSchema } from "./dto/team-project-params.schema";
 import { updateTeamSchema } from "./dto/update-team.schema";
 import { workspaceParamsSchema } from "./dto/workspace-params.schema";
 
@@ -52,6 +53,14 @@ router.delete(
   validate({ params: teamParamsSchema }),
   requireWorkspacePermission(PERMISSIONS.TEAM_DELETE),
   teamController.deleteTeam
+);
+
+router.delete(
+  "/:workspaceId/teams/:teamId/projects/:projectId",
+  authenticate,
+  validate({ params: teamProjectParamsSchema }),
+  requireWorkspacePermission(PERMISSIONS.TEAM_UPDATE),
+  teamController.removeProjectFromTeam
 );
 
 export default router;

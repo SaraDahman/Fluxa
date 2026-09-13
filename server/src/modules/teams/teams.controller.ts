@@ -7,6 +7,7 @@ import { teamService } from "./teams.service";
 import type { CreateTeamBody } from "./dto/create-team.schema";
 import type { PaginationQuery } from "./dto/pagination.schema";
 import type { TeamParams } from "./dto/team-params.schema";
+import type { TeamProjectParams } from "./dto/team-project-params.schema";
 import type { UpdateTeamBody } from "./dto/update-team.schema";
 import type { WorkspaceParams } from "./dto/workspace-params.schema";
 
@@ -85,6 +86,21 @@ export const teamController = {
       res.json({
         success: true,
         message: "Team deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async removeProjectFromTeam(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { workspaceId, teamId, projectId } = req.params as TeamProjectParams;
+
+      await teamService.removeProjectFromTeam(projectId, workspaceId, teamId);
+
+      res.json({
+        success: true,
+        message: "Project removed from team successfully",
       });
     } catch (error) {
       next(error);
