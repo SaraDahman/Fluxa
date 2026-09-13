@@ -77,4 +77,16 @@ export const teamService = {
       throw new ApiError(404, "Team not found");
     }
   },
+
+  async removeProjectFromTeam(
+    projectId: string,
+    workspaceId: string,
+    teamId: string
+  ): Promise<void> {
+    const result = await teamRepository.removeProjectFromTeam(projectId, workspaceId, teamId);
+
+    if (result.count === 0) {
+      throw new ApiError(404, "Project is not assigned to this team");
+    }
+  },
 };
