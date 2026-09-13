@@ -2,12 +2,15 @@ import type { TeamModel } from "../../../generated/prisma/models/Team";
 
 import { ApiError } from "../../utils/api-error";
 
+import { PERMISSIONS } from "../../permissions/constants";
+import { resolveProjectAccess } from "../../permissions/resolve";
+
 import { teamRepository } from "./teams.repository";
 
 import type { CreateTeamBody } from "./dto/create-team.schema";
 import type { PaginatedResponse, PaginationQuery } from "./dto/pagination.schema";
 import type { UpdateTeamBody } from "./dto/update-team.schema";
-import type { TeamWithMembers, TeamSummary } from "./types";
+import type { TeamProjectWithAccess, TeamWithMembers, TeamSummary } from "./types";
 
 export const teamService = {
   async createTeam(workspaceId: string, data: CreateTeamBody): Promise<TeamWithMembers> {
@@ -88,5 +91,38 @@ export const teamService = {
     if (result.count === 0) {
       throw new ApiError(404, "Project is not assigned to this team");
     }
+  },
+
+  async listTeamProjects(
+    userId: string,
+    teamId: string,
+    workspaceId: string,
+    pagination: PaginationQuery
+  ): Promise<PaginatedResponse<TeamProjectWithAccess>> {
+    const team = await teamRepository.findInWorkspace(teamId, workspaceId);
+
+    if (!team) {
+      throw new ApiError(404, "Team not found");
+    }
+
+    const { offset, limit } = pagination;
+
+    const [items, total] = await Promise.all([
+      teamRepository.listProjectsByTeam(teamId, offset, limit),
+      teamRepository.countProjectsByTeam(teamId),
+    ]);
+
+    const itemsWithAccess = await Promise.all(
+      items.map(async (project) => {
+        const access = await resolveProjectAccess(userId, project.id);
+
+        return {
+          ...project,
+          hasAccess: access ? access.permissions.has(PERMISSIONS.PROJECT_VIEW) : false,
+        };
+      })
+    );
+
+    return { items: itemsWithAccess, total, offset, limit };
   },
 };

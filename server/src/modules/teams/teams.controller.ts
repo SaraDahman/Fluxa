@@ -106,4 +106,23 @@ export const teamController = {
       next(error);
     }
   },
+
+  async listTeamProjects(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { workspaceId, teamId } = req.params as TeamParams;
+      const { offset, limit } = req.query as unknown as PaginationQuery;
+
+      const result = await teamService.listTeamProjects(req.user!.userId, teamId, workspaceId, {
+        offset,
+        limit,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

@@ -55,6 +55,14 @@ router.delete(
   teamController.deleteTeam
 );
 
+router.get(
+  "/:workspaceId/teams/:teamId/projects",
+  authenticate,
+  validate({ params: teamParamsSchema, query: paginationSchema }),
+  requireWorkspacePermission(PERMISSIONS.TEAM_VIEW),
+  teamController.listTeamProjects
+);
+
 router.delete(
   "/:workspaceId/teams/:teamId/projects/:projectId",
   authenticate,
