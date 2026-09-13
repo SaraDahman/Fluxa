@@ -32,6 +32,26 @@ export const teamRepository = {
     return prisma.team.findUnique({ where: { id: teamId } });
   },
 
+  findInWorkspace(teamId: string, workspaceId: string) {
+    return prisma.team.findFirst({
+      where: { id: teamId, workspaceId },
+      select: { id: true },
+    });
+  },
+
+  listProjectsByTeam(teamId: string, skip: number, take: number) {
+    return prisma.project.findMany({
+      where: { teamId },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      skip,
+      take,
+    });
+  },
+
+  countProjectsByTeam(teamId: string) {
+    return prisma.project.count({ where: { teamId } });
+  },
+
   listByWorkspace(workspaceId: string, skip: number, take: number) {
     return prisma.team.findMany({
       where: { workspaceId },

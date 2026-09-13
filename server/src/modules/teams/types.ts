@@ -1,3 +1,4 @@
+import type { ProjectModel } from "../../../generated/prisma/models/Project";
 import type { TeamModel } from "../../../generated/prisma/models/Team";
 
 export type TeamWithMembers = TeamModel & {
@@ -6,6 +7,10 @@ export type TeamWithMembers = TeamModel & {
 
 export type TeamSummary = TeamModel & {
   _count: { members: number };
+};
+
+export type TeamProjectWithAccess = ProjectModel & {
+  hasAccess: boolean;
 };
 
 export type TeamMemberWithUser = {
